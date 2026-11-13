@@ -1,0 +1,40 @@
+<main class="retro-deck-builder" [class.dark-mode]="darkMode">
+  <header class="pixel-header">
+    <div class="header-left">
+      <a class="back-button" [routerLink]="['/deck-manager']" aria-label="Volver a tus mazos">◀</a>
+      <div class="logo">
+        <span class="pokemon-text">POKEMON</span>
+        <span class="tcg-text">TCG ARENA</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <button class="dark-mode-toggle" (click)="toggleDarkMode(); $event.stopPropagation()" [title]="darkMode ? 'Modo claro' : 'Modo oscuro'">
+        <span class="toggle-icon">{{ darkMode ? '☀️' : '🌙' }}</span>
+      </button>
+      <div class="header-info">
+        <p>Gestor de Mazos</p>
+        <h1>Crear / Editar</h1>
+      </div>
+    </div>
+  </header>
+
+  <div class="builder-grid">
+    <section class="builder-panel builder-panel--catalog">
+      <app-card-catalog (cardSelected)="addCard($event)" [darkMode]="darkMode"></app-card-catalog>
+    </section>
+    <section class="builder-panel">
+      <app-deck-editor
+        [entries]="entries()"
+        [validationErrors]="validationErrors()"
+        [deckName]="deckName()"
+        [saving]="saving()"
+        [saveMessage]="saveMessage()"
+        [saveError]="saveError()"
+        [darkMode]="darkMode"
+        (increaseQuantity)="increaseQuantity($event)"
+        (decreaseQuantity)="decreaseQuantity($event)"
+        (saveDeck)="saveDeck($event)"
+      />
+    </section>
+  </div>
+</main>

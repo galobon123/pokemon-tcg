@@ -1,0 +1,3 @@
+ALTER TABLE deck_cards
+    ADD COLUMN IF NOT EXISTS attack_name VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS attack_text TEXT;

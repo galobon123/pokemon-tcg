@@ -1,0 +1,90 @@
+<main class="retro-deck-manager" [class.dark-mode]="darkMode">
+  <header class="pixel-header">
+    <div class="header-left">
+      <a class="back-button" [routerLink]="['/lobby']" aria-label="Volver al lobby">◀</a>
+      <div class="logo">
+        <span class="pokemon-text">POKEMON</span>
+        <span class="tcg-text">TCG ARENA</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <button class="dark-mode-toggle" (click)="toggleDarkMode(); $event.stopPropagation()" [title]="darkMode ? 'Modo claro' : 'Modo oscuro'">
+        <span class="toggle-icon">{{ darkMode ? '☀️' : '🌙' }}</span>
+      </button>
+      <button class="primary-button" type="button" (click)="createNewDeck()">
+        Crear nuevo
+      </button>
+    </div>
+  </header>
+
+  <section class="page-title">
+    <div>
+      <p>Gestor de Mazos</p>
+      <h1>Tus mazos</h1>
+    </div>
+  </section>
+
+  @if (statusMessage()) {
+    <p class="status status-success">{{ statusMessage() }}</p>
+  }
+
+  @if (loadingDecks()) {
+    <p class="status">Cargando mazos...</p>
+  }
+
+  @if (!loadingDecks() && decks().length === 0 && !decksError()) {
+    <p class="status">Todavia no tenes mazos guardados.</p>
+  }
+
+  @if (decksError()) {
+    <p class="status status-error">{{ decksError() }}</p>
+  }
+
+  @if (decks().length > 0) {
+    <section class="deck-list">
+      @for (deck of decks(); track deck.id) {
+        <article class="deck-card">
+          <div class="deck-card-top">
+            <div>
+              <h2>{{ deck.name }}</h2>
+              <p>{{ totalCards(deck) }} cartas · {{ deck.cards.length }} tipos</p>
+            </div>
+            <button
+              class="secondary-button"
+              type="button"
+              [disabled]="selectingDeckId() === deck.id"
+              (click)="selectDeck(deck.id)"
+            >
+              {{ selectingDeckId() === deck.id ? 'Abriendo' : 'Editar mazo' }}
+            </button>
+          </div>
+
+          <div class="deck-preview" aria-label="Vista previa de cartas del mazo">
+            @for (card of deck.cards; track card.cardId) {
+              <button
+                class="deck-preview-card"
+                type="button"
+                [title]="card.name + ' x' + card.quantity"
+                [attr.aria-label]="'Ver detalle de ' + card.name"
+                (click)="openPreviewCard(card)"
+              >
+                <div class="preview-card-frame">
+                  <img [src]="cardImage(card)" [alt]="card.name" (error)="onPreviewImageError($event)">
+                </div>
+                <span class="preview-card-count">x{{ card.quantity }}</span>
+                <span class="preview-card-name">{{ card.name }}</span>
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
+
+  @if (selectedPreviewCard()) {
+    <app-card-detail-overlay
+      [card]="selectedPreviewCard()"
+      (close)="closePreviewCard()"
+    ></app-card-detail-overlay>
+  }
+</main>

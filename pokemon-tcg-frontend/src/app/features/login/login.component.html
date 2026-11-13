@@ -1,0 +1,97 @@
+<div class="pixel-login-container" [class.dark-mode]="darkMode">
+  <!-- HEADER -->
+  <div class="pixel-header">
+    <div class="logo-section">
+      <div class="pokemon-title">POK<span class="accent-e">E</span>MON</div>
+      <div class="tcg-title">TCG ARENA</div>
+    </div>
+    <button class="dark-mode-toggle" (click)="toggleDarkMode()" [title]="darkMode ? 'Modo claro' : 'Modo oscuro'">
+      <span class="toggle-icon">{{ darkMode ? '☀️' : '🌙' }}</span>
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="login-content">
+    <div class="login-wrapper">
+      <!-- WELCOME CARD -->
+      <div class="pixel-card welcome-card">
+        <div class="card-icon-wrapper">
+          <img src="https://preview.redd.it/can-anyone-remake-this-pok%C3%A9mon-fire-red-sprite-v0-83bo3jhbihpe1.png?width=180&format=png&auto=webp&s=3932e293507fa1d840ba5ed9cccf3f79b5d9f308" alt="Trainer" class="trainer-icon">
+        </div>
+        <h2>¡Entrenador!</h2>
+        <p>Ingresa al mundo Pokémon TCG</p>
+      </div>
+
+      <!-- ACTIVE SESSION BANNER -->
+      <div class="active-session-banner" *ngIf="activeUser">
+        <p>Sesión iniciada como <strong>{{ activeUser }}</strong></p>
+        <button type="button" class="pixel-button banner-button" (click)="goToLobby()">IR AL LOBBY</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <div class="form-group">
+          <label for="email" class="pixel-label">EMAIL</label>
+          <div class="input-wrapper">
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="pixel-input"
+              placeholder="tu@email.com"
+              [class.error]="email?.invalid && email?.touched"
+            />
+          </div>
+          <div class="error-message" *ngIf="email?.invalid && email?.touched">
+            <span *ngIf="email?.hasError('required')">Se requiere un email</span>
+            <span *ngIf="email?.hasError('email')">Email inválido</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="pixel-label">CONTRASEÑA</label>
+          <div class="input-wrapper">
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="pixel-input"
+              placeholder="Minimo 6 caracteres"
+              [class.error]="password?.invalid && password?.touched"
+            />
+          </div>
+          <div class="error-message" *ngIf="password?.invalid && password?.touched">
+            <span *ngIf="password?.hasError('required')">Se requiere una contraseña</span>
+            <span *ngIf="password?.hasError('minlength')">Mínimo 6 caracteres</span>
+          </div>
+        </div>
+
+        <!-- ERROR MESSAGE -->
+        <div class="error-box" *ngIf="errorMessage">
+          <p>{{ errorMessage }}</p>
+          <button *ngIf="showForceButton" type="button" class="pixel-button force-button" (click)="forceLogin()">
+            Cerrar sesión anterior y entrar
+          </button>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <button
+          type="submit"
+          class="pixel-button submit-button"
+          [disabled]="loginForm.invalid || isLoading"
+        >
+          <span *ngIf="!isLoading">INICIAR SESIÓN</span>
+          <span *ngIf="isLoading">CONECTANDO...</span>
+        </button>
+
+
+        <a class="alt-link" [routerLink]="['/register']">Crear cuenta</a>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="pixel-footer">
+    <p>© 2026 Pokémon Trading Card Game Arena • v1.0</p>
+  </div>
+</div>

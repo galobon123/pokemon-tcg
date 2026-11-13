@@ -1,0 +1,4 @@
+ALTER TABLE deck_cards
+    ADD COLUMN IF NOT EXISTS energy_type VARCHAR(64),
+    ADD COLUMN IF NOT EXISTS attack_cost TEXT,
+    ADD COLUMN IF NOT EXISTS retreat_cost INTEGER;

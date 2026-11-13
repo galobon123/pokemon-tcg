@@ -1,0 +1,237 @@
+$retro-blue: #3949ab;
+$retro-gold: #ffcb05;
+$retro-red: #f44336;
+$retro-bg: #f5f5f5;
+$retro-dark: #222;
+$retro-shadow: rgba(0, 0, 0, 0.3);
+
+@mixin pixel-borders($color: $retro-dark) {
+  border: 4px solid $color;
+  border-image-slice: 2;
+  border-image-width: 2;
+  border-image-outset: 0;
+  border-image-source: url('data:image/svg+xml;utf8,<svg width="4" height="4" viewBox="0 0 4 4" xmlns="http://www.w3.org/2000/svg"><rect width="4" height="4" fill="#{$color}"/><rect x="1" y="1" width="2" height="2" fill="none"/></svg>');
+}
+
+@mixin pixel-shadow {
+  box-shadow: 4px 4px 0px $retro-shadow;
+}
+
+* {
+  font-family: 'Press Start 2P', cursive;
+  image-rendering: pixelated;
+}
+
+.retro-settings {
+  min-height: 100vh;
+  background-color: $retro-bg;
+  background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0),
+    linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+  color: $retro-dark;
+  padding-bottom: 2rem;
+}
+
+.pixel-header {
+  background-color: $retro-blue;
+  border-bottom: 4px solid $retro-gold;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  @include pixel-shadow;
+  margin-bottom: 1.5rem;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .back-button {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    background: $retro-gold;
+    color: $retro-dark;
+    text-decoration: none;
+    border: 4px solid $retro-dark;
+    font-size: 0.8rem;
+    @include pixel-shadow;
+    cursor: pointer;
+    transition: transform 0.1s steps(2);
+
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px $retro-shadow;
+    }
+
+    &:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px $retro-shadow;
+    }
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .pokemon-text {
+      color: #fff;
+      font-size: 1.25rem;
+      text-shadow: 2px 2px 0px $retro-dark;
+    }
+
+    .tcg-text {
+      color: $retro-gold;
+      font-size: 0.85rem;
+      text-shadow: 2px 2px 0px $retro-dark;
+    }
+  }
+
+  .header-info {
+    h1 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: $retro-gold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  }
+}
+
+.settings-content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.settings-card {
+  background: white;
+  @include pixel-borders;
+  @include pixel-shadow;
+  padding: 1.5rem;
+
+  h2 {
+    margin: 0 0 0.5rem;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+  }
+
+  .settings-desc {
+    margin: 0 0 1.5rem;
+    font-size: 0.5rem;
+    color: #666;
+  }
+}
+
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: $retro-dark;
+  color: white;
+  border: 4px solid $retro-dark;
+  padding: 0.75rem 1.2rem;
+  @include pixel-shadow;
+  cursor: pointer;
+  transition: transform 0.1s steps(2);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px $retro-shadow;
+  }
+
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px $retro-shadow;
+  }
+
+  .theme-icon {
+    font-size: 1.3rem;
+  }
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .volume-label {
+    font-size: 1.2rem;
+    width: 1.5rem;
+    text-align: center;
+  }
+
+  .volume-slider {
+    flex: 1;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: $retro-dark;
+    outline: none;
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: $retro-gold;
+      border: 3px solid $retro-dark;
+      cursor: pointer;
+    }
+
+    &::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: $retro-gold;
+      border: 3px solid $retro-dark;
+      cursor: pointer;
+    }
+  }
+
+  .volume-value {
+    font-size: 0.6rem;
+    min-width: 3rem;
+    text-align: right;
+  }
+}
+
+.dark-mode {
+  &.retro-settings {
+    background-color: #0d0d1a;
+    background-image:
+      linear-gradient(45deg, #15152a 25%, transparent 25%, transparent 75%, #15152a 75%, #15152a),
+      linear-gradient(45deg, #15152a 25%, transparent 25%, transparent 75%, #15152a 75%, #15152a);
+  }
+
+  .settings-card {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    border-color: #222;
+    border-image: none;
+
+    h2 { color: #e0e0e0; }
+    .settings-desc { color: #999; }
+  }
+
+  .volume-slider {
+    background: #444;
+
+    &::-webkit-slider-thumb {
+      border-color: #222;
+    }
+  }
+
+  .theme-toggle-btn {
+    background: #1a1a2e;
+    border-color: #444;
+    color: #e0e0e0;
+  }
+}

@@ -1,0 +1,480 @@
+// ─── SIDE MODE (deck-builder hover) ─────────────────────────────────────────
+.overlay-side {
+  position: fixed;
+  z-index: 1000;
+  width: 420px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  background: #1a1a2e;
+  border: 3px solid #e8b830;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.5);
+  animation: overlay-in 150ms ease;
+  font-family: 'Press Start 2P', cursive;
+  cursor: pointer;
+
+  .overlay-inner {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .overlay-image img {
+    width: 160px;
+    height: auto;
+    display: block;
+    border: 2px solid #e8b830;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .overlay-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.6rem;
+    line-height: 1.4;
+    color: #e0e0e0;
+  }
+
+  .name { font-size: 0.65rem; }
+  .badge { font-size: 0.45rem; }
+  .meta { font-size: 0.45rem; }
+  .stat .label { font-weight: 700; color: #7eb8da; }
+  .stat .value { text-align: right; color: #fff; }
+  .energies-title { font-size: 0.45rem; }
+  .attack-name { font-size: 0.5rem; }
+  .damage { font-size: 0.65rem; }
+  .attack-text { font-size: 0.42rem; }
+  .ability { font-size: 0.42rem; }
+  .rule-text { font-size: 0.42rem; }
+  .wr-rr { font-size: 0.45rem; }
+
+  .attached-energies-panel {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border: 2px solid #3B9C42;
+    background: rgba(59, 156, 66, 0.1);
+    border-radius: 4px;
+  }
+
+  .attacks { margin-top: 6px; }
+  .attacks h4 { font-size: 0.5rem; }
+
+  .attack {
+    margin-bottom: 6px;
+    padding: 4px 6px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 3px;
+  }
+
+  .cost-row {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 2px;
+  }
+
+  .cost-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+  }
+
+  .cost-count {
+    font-size: 0.4rem;
+    color: #e8b830;
+    margin-left: 2px;
+  }
+
+  .abilities-section { margin-top: 6px; }
+  .abilities-section h4 { font-size: 0.5rem; }
+  .rules-section { margin-top: 6px; }
+  .rules-section h4 { font-size: 0.5rem; }
+}
+
+// ─── FULLSCREEN MODE (battle arena click) ────────────────────────────────────
+
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: backdrop-in 150ms ease;
+  cursor: pointer;
+}
+
+.overlay-card {
+  position: relative;
+  background: #12122a;
+  border: 3px solid #e8b830;
+  box-shadow: 0 0 40px rgba(232, 184, 48, 0.25), 6px 6px 0 rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  max-height: 88vh;
+  overflow-y: auto;
+  width: 780px;
+  max-width: calc(100vw - 32px);
+  cursor: default;
+  animation: overlay-in 200ms ease;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #e8b830;
+    border-radius: 3px;
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: rgba(232, 60, 60, 0.85);
+  color: #fff;
+  border: 2px solid #e83838;
+  border-radius: 50%;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  font-family: 'Press Start 2P', cursive;
+  transition: transform 0.15s, background 0.15s;
+
+  &:hover {
+    background: #ff5555;
+    transform: scale(1.15);
+  }
+}
+
+.overlay-inner {
+  display: flex;
+  gap: 20px;
+  padding: 24px;
+}
+
+.overlay-image {
+  flex: 0 0 auto;
+}
+
+.overlay-image img {
+  width: 280px;
+  height: auto;
+  display: block;
+  border: 3px solid #e8b830;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.overlay-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: #e0e0e0;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.name {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e8b830;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  background: #e8b830;
+  color: #12122a;
+  border: 2px solid #c49a20;
+  padding: 2px 8px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: 2px;
+}
+
+.meta {
+  color: #aaa;
+  margin-bottom: 10px;
+  font-size: 0.5rem;
+}
+
+.stats {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border: 2px solid #e8b830;
+  background: rgba(232, 184, 48, 0.08);
+  border-radius: 4px;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.stat .label {
+  font-weight: 700;
+  color: #7eb8da;
+}
+
+.stat .value {
+  text-align: right;
+  color: #fff;
+}
+
+.status-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 10px;
+  padding: 6px 10px;
+  border: 2px solid #e8b830;
+  background: rgba(232, 184, 48, 0.08);
+  border-radius: 4px;
+  text-transform: uppercase;
+
+  .status-label {
+    color: #7eb8da;
+    font-size: 0.48rem;
+  }
+
+  .status-value {
+    color: #fff;
+    font-size: 0.52rem;
+  }
+
+  &.status-asleep { border-color: #673AB7; background: rgba(103, 58, 183, 0.22); }
+  &.status-paralyzed { border-color: #FFC107; background: rgba(255, 193, 7, 0.2); }
+  &.status-confused { border-color: #E91E63; background: rgba(233, 30, 99, 0.22); }
+  &.status-poisoned { border-color: #8BC34A; background: rgba(139, 195, 74, 0.2); }
+  &.status-burned { border-color: #FF5722; background: rgba(255, 87, 34, 0.22); }
+}
+
+// ─── ATTACHED ENERGIES PANEL ────────────────────────────────────────────
+
+.attached-energies-panel {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 2px solid #3B9C42;
+  background: rgba(59, 156, 66, 0.1);
+  border-radius: 4px;
+}
+
+.energies-title {
+  margin: 0 0 8px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #66bb6a;
+}
+
+.energies-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+// ─── ATTACKS ─────────────────────────────────────────────────────────────
+
+.attacks {
+  margin-top: 10px;
+}
+
+.attacks h4 {
+  margin: 0 0 6px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ff8a65;
+}
+
+.attack {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.attack-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.attack-name {
+  font-weight: 700;
+  font-size: 0.6rem;
+  color: #fff;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.damage {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #ff5252;
+  white-space: nowrap;
+}
+
+.cost-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.cost-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+}
+
+.cost-dot.fire { background: #E8402E; }
+.cost-dot.water { background: #2B8ECE; }
+.cost-dot.grass { background: #3B9C42; }
+.cost-dot.lightning { background: #F9A825; }
+.cost-dot.psychic { background: #A040A0; }
+.cost-dot.fighting { background: #C03028; }
+.cost-dot.darkness { background: #505050; }
+.cost-dot.metal { background: #808080; }
+.cost-dot.fairy { background: #E88EAD; }
+.cost-dot.dragon { background: #6C2FA0; }
+.cost-dot.colorless { background: #A8A878; }
+
+.cost-count {
+  font-size: 0.45rem;
+  color: #e8b830;
+  margin-left: 2px;
+}
+
+.attack-text {
+  font-size: 0.5rem;
+  color: #bbb;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.abilities-section {
+  margin-top: 10px;
+}
+
+.abilities-section h4 {
+  margin: 0 0 6px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ce93d8;
+}
+
+.ability {
+  font-size: 0.5rem;
+  color: #ddd;
+  padding: 6px 8px;
+  background: rgba(206, 147, 216, 0.1);
+  border: 1px solid rgba(206, 147, 216, 0.3);
+  border-radius: 3px;
+  margin-bottom: 4px;
+}
+
+.ability-name {
+  font-weight: 700;
+  color: #ce93d8;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.ability-text {
+  color: #bbb;
+  font-size: 0.42rem;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.rules-section {
+  margin-top: 10px;
+}
+
+.rules-section h4 {
+  margin: 0 0 6px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ff8a65;
+}
+
+.rule-text {
+  font-size: 0.5rem;
+  color: #ddd;
+  padding: 6px 8px;
+  background: rgba(255, 138, 101, 0.1);
+  border: 1px solid rgba(255, 138, 101, 0.3);
+  border-radius: 3px;
+  line-height: 1.5;
+}
+
+.wr-rr {
+  margin-top: 10px;
+  font-size: 0.5rem;
+}
+
+.weaknesses,
+.resistances,
+.retreat-info {
+  color: #aaa;
+  margin-bottom: 3px;
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

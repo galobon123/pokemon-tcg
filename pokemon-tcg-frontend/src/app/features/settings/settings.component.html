@@ -1,0 +1,46 @@
+<div class="retro-settings" [class.dark-mode]="darkMode">
+  <header class="pixel-header">
+    <div class="header-left">
+      <button class="back-button" (click)="goBack()">◀</button>
+      <div class="logo">
+        <span class="pokemon-text">POKEMON</span>
+        <span class="tcg-text">TCG ARENA</span>
+      </div>
+    </div>
+    <div class="header-info">
+      <h1>OTROS</h1>
+    </div>
+  </header>
+
+  <main class="settings-content">
+    <div class="settings-card">
+      <h2>VOLUMEN DE SONIDO</h2>
+      <p class="settings-desc">Controla el volumen de los efectos de sonido</p>
+
+      <div class="volume-control">
+        <span class="volume-label">🔇</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          [value]="soundVolume"
+          (input)="onVolumeChange($event)"
+          class="volume-slider"
+        />
+        <span class="volume-label">🔊</span>
+        <span class="volume-value">{{ soundVolume }}%</span>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h2>TEMA</h2>
+      <p class="settings-desc">Elegí entre modo claro y modo oscuro</p>
+
+      <button class="theme-toggle-btn" (click)="toggleTheme()">
+        <span class="theme-icon">{{ darkMode ? '☀️' : '🌙' }}</span>
+        <span class="theme-label">{{ darkMode ? 'MODO CLARO' : 'MODO OSCURO' }}</span>
+      </button>
+    </div>
+  </main>
+</div>

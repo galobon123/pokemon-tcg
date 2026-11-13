@@ -1,0 +1,173 @@
+.deck-panel {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.deck-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+h2,
+p {
+  margin: 0;
+}
+
+.deck-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+input,
+button {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+  min-height: 2.8rem;
+  padding: 0 0.85rem;
+}
+
+button {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.deck-list {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+  max-height: 500px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.deck-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.deck-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.deck-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.deck-entry {
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: 0.875rem;
+}
+
+.deck-entry div:first-child {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+
+  strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.deck-entry span,
+.empty,
+.message {
+  color: #475569;
+}
+
+.quantity-controls {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 2.5rem 2rem 2.5rem;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .deck-list {
+    grid-template-columns: 1fr;
+  }
+
+  .deck-entry {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .quantity-controls {
+    justify-content: start;
+  }
+}
+
+.quantity-controls button {
+  padding: 0;
+}
+
+.success {
+  color: #047857;
+}
+
+.error,
+.error-list {
+  color: #b91c1c;
+}
+
+.dark-mode {
+  .deck-header h2 { color: #e0e0e0; }
+  .deck-header p { color: #999; }
+
+  .deck-form label { color: #ccc; }
+  .deck-form input {
+    background: #0d0d1a;
+    color: #e0e0e0;
+    border-color: #444;
+  }
+
+  .deck-list {
+    scrollbar-color: #555 transparent;
+  }
+
+  .deck-list::-webkit-scrollbar-thumb {
+    background: #555;
+  }
+
+  .deck-entry {
+    border-color: #333;
+
+    strong { color: #e0e0e0; }
+  }
+
+  .deck-entry span,
+  .empty,
+  .message:not(.success):not(.error):not(.error-list) {
+    color: #999;
+  }
+
+  .quantity-controls button {
+    background: #2a2a4e;
+    color: #e0e0e0;
+    border-color: #555;
+  }
+
+  .quantity-controls span {
+    color: #e0e0e0;
+  }
+
+  .success { color: #66bb6a; }
+  .error, .error-list { color: #ef4444; }
+}

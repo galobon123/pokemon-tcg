@@ -1,0 +1,37 @@
+<div class="deck-view-overlay" (click)="onOverlayClick()">
+  <div
+    class="deck-view-panel"
+    role="dialog"
+    aria-label="Mazo del jugador"
+    tabindex="-1"
+    #deckViewPanel
+    (click)="$event.stopPropagation()"
+  >
+    <header class="deck-view-header">
+      <div class="deck-view-title">
+        <span class="deck-view-label">MAZO</span>
+        <span class="deck-view-name">{{ deckTitle }}</span>
+      </div>
+      <div class="deck-view-count">{{ deckTotalCards }} cartas</div>
+      <button class="deck-view-close" type="button" (click)="requestClose()">CERRAR</button>
+    </header>
+
+    <div class="deck-view-body">
+      <div class="deck-view-state deck-view-error" *ngIf="error">{{ error }}</div>
+      <div class="deck-view-state" *ngIf="!error && deckCardsView.length === 0">
+        Mazo vacio.
+      </div>
+
+      <div class="deck-view-list" *ngIf="!error && deckCardsView.length > 0">
+        <div class="deck-view-card" *ngFor="let card of deckCardsView; trackBy: trackByDeckCardId">
+          <img [src]="card.imageUrl" [alt]="card.name" class="deck-view-image">
+          <div class="deck-view-meta">
+            <div class="deck-view-card-name">{{ card.name }}</div>
+            <div class="deck-view-card-type">{{ card.type }}</div>
+          </div>
+          <div class="deck-view-qty">x{{ card.quantity }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

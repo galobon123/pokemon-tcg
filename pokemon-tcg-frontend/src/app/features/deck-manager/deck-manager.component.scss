@@ -1,0 +1,399 @@
+$retro-blue: #3949ab;
+$retro-gold: #ffcb05;
+$retro-red: #f44336;
+$retro-bg: #f5f5f5;
+$retro-dark: #222;
+$retro-shadow: rgba(0, 0, 0, 0.3);
+
+@mixin pixel-borders($color: $retro-dark) {
+  border: 4px solid $color;
+  border-image-slice: 2;
+  border-image-width: 2;
+  border-image-outset: 0;
+  border-image-source: url('data:image/svg+xml;utf8,<svg width="4" height="4" viewBox="0 0 4 4" xmlns="http://www.w3.org/2000/svg"><rect width="4" height="4" fill="#{$color}"/><rect x="1" y="1" width="2" height="2" fill="none"/></svg>');
+}
+
+@mixin pixel-shadow {
+  box-shadow: 4px 4px 0px $retro-shadow;
+}
+
+@mixin pixel-hover {
+  transition: transform 0.1s steps(2);
+  &:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px $retro-shadow;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="16" height="16" fill="transparent"/><rect x="0" y="0" width="4" height="4" fill="black"/><rect x="4" y="4" width="4" height="4" fill="black"/><rect x="8" y="8" width="4" height="4" fill="black"/></svg>'), pointer;
+  }
+  &:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px $retro-shadow;
+  }
+}
+
+* {
+  font-family: 'Press Start 2P', cursive;
+  image-rendering: pixelated;
+}
+
+.retro-deck-manager {
+  min-height: 100vh;
+  background-color: $retro-bg;
+  background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0),
+    linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+  color: $retro-dark;
+  padding-bottom: 2rem;
+}
+
+.pixel-header {
+  background-color: $retro-blue;
+  border-bottom: 4px solid $retro-gold;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  @include pixel-shadow;
+  margin-bottom: 1.5rem;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .back-button {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    background: $retro-gold;
+    color: $retro-dark;
+    text-decoration: none;
+    border: 4px solid $retro-dark;
+    font-size: 0.8rem;
+    @include pixel-shadow;
+    @include pixel-hover;
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .pokemon-text {
+      color: #fff;
+      font-size: 1.25rem;
+      text-shadow: 2px 2px 0px $retro-dark;
+    }
+
+    .tcg-text {
+      color: $retro-gold;
+      font-size: 0.85rem;
+      text-shadow: 2px 2px 0px $retro-dark;
+    }
+  }
+}
+
+.page-title {
+  margin: 0 auto 1.5rem;
+  max-width: 960px;
+  padding: 0 2rem;
+
+  p {
+    margin: 0 0 0.5rem;
+    color: #5f5f5f;
+    font-size: 0.7rem;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+}
+
+.primary-button {
+  background: $retro-gold;
+  color: $retro-dark;
+  border: 4px solid $retro-dark;
+  padding: 0.6rem 1.2rem;
+  font-weight: 700;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  @include pixel-shadow;
+  @include pixel-hover;
+}
+
+.status {
+  margin: 0 auto 1rem;
+  max-width: 960px;
+  padding: 0 2rem;
+  color: #444;
+  font-size: 0.6rem;
+}
+
+.status-error {
+  color: $retro-red;
+}
+
+.status-success {
+  color: #2e7d32;
+}
+
+.deck-list {
+  display: grid;
+  gap: 1.25rem;
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 0 2rem;
+}
+
+.deck-card {
+  background: #fff;
+  padding: 1rem 1.5rem;
+  display: grid;
+  gap: 1rem;
+  @include pixel-borders();
+  @include pixel-shadow;
+}
+
+.deck-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.deck-card h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.deck-card p {
+  margin: 0.4rem 0 0;
+  color: #5f5f5f;
+  font-size: 0.6rem;
+}
+
+.deck-preview {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 70px;
+  gap: 0.45rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.4rem 0.2rem 0.7rem;
+  border-top: 3px dashed rgba(34, 34, 34, 0.25);
+  scrollbar-color: $retro-blue #e8e8e8;
+  scrollbar-width: thin;
+}
+
+.deck-preview::-webkit-scrollbar {
+  height: 10px;
+}
+
+.deck-preview::-webkit-scrollbar-track {
+  background: #e8e8e8;
+  border: 2px solid $retro-dark;
+}
+
+.deck-preview::-webkit-scrollbar-thumb {
+  background: $retro-blue;
+  border: 2px solid $retro-dark;
+}
+
+.deck-preview-card {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 94px auto auto;
+  justify-items: center;
+  gap: 0.2rem;
+  color: $retro-dark;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.deck-preview-card:focus-visible {
+  outline: 3px solid $retro-blue;
+  outline-offset: 3px;
+}
+
+.deck-preview-card:hover .preview-card-frame {
+  transform: translateY(-2px);
+  box-shadow: 2px 4px 0 rgba(0, 0, 0, 0.24);
+}
+
+.preview-card-frame {
+  position: relative;
+  width: 64px;
+  height: 90px;
+  box-sizing: border-box;
+  padding: 3px;
+  background: linear-gradient(180deg, #ffe56a 0%, #d69f18 100%);
+  border: 2px solid $retro-dark;
+  border-radius: 8px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  transition: transform 0.12s steps(2), box-shadow 0.12s steps(2);
+}
+
+.preview-card-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 5px;
+}
+
+.preview-card-count {
+  background: $retro-gold;
+  color: $retro-dark;
+  min-width: 36px;
+  border: 2px solid $retro-dark;
+  border-radius: 5px;
+  padding: 0.16rem 0.28rem;
+  font-size: 0.45rem;
+  line-height: 1;
+  text-align: center;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.preview-card-name {
+  width: 100%;
+  color: #4d4d4d;
+  font-size: 0.42rem;
+  line-height: 1.25;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.secondary-button {
+  background: $retro-blue;
+  color: #fff;
+  border: 4px solid $retro-dark;
+  padding: 0.5rem 1rem;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  @include pixel-shadow;
+  @include pixel-hover;
+}
+
+.secondary-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+// Dark mode toggle
+.dark-mode-toggle {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid $retro-dark;
+  cursor: pointer;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .toggle-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+}
+
+.dark-mode {
+  &.retro-deck-manager {
+    background-color: #0d0d1a;
+    background-image:
+      linear-gradient(45deg, #15152a 25%, transparent 25%, transparent 75%, #15152a 75%, #15152a),
+      linear-gradient(45deg, #15152a 25%, transparent 25%, transparent 75%, #15152a 75%, #15152a);
+    color: #e0e0e0;
+  }
+
+  .page-title p { color: #999; }
+  .page-title h1 { color: #e0e0e0; }
+
+  .status { color: #999; }
+  .status-success { color: #66bb6a; }
+
+  .deck-card {
+    background: #1a1a2e;
+
+    h2 { color: #e0e0e0; }
+    p { color: #999; }
+
+    .deck-preview {
+      border-top-color: rgba(255,255,255,0.1);
+    }
+
+    .preview-card-name { color: #999; }
+  }
+
+  .dark-mode-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #666;
+
+    &:hover { background: rgba(255, 255, 255, 0.3); }
+  }
+
+  .pixel-header .back-button,
+  .primary-button,
+  .secondary-button {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="16" height="16" fill="transparent"/><rect x="0" y="0" width="4" height="4" fill="white"/><rect x="4" y="4" width="4" height="4" fill="white"/><rect x="8" y="8" width="4" height="4" fill="white"/></svg>'), pointer;
+  }
+}
+
+@media (max-width: 900px) {
+  .pixel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .page-title,
+  .deck-list,
+  .status {
+    padding: 0 1rem;
+  }
+
+  .deck-card {
+    padding: 1rem;
+  }
+
+  .deck-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .deck-preview {
+    grid-auto-columns: 68px;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
+  .deck-preview-card {
+    grid-template-rows: 82px auto auto;
+  }
+
+  .preview-card-frame {
+    width: 58px;
+    height: 80px;
+  }
+}

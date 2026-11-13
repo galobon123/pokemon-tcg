@@ -1,0 +1,206 @@
+$retro-blue: #3949ab;
+$retro-gold: #ffcb05;
+$retro-red: #f44336;
+$retro-bg: #f5f5f5;
+$retro-dark: #222;
+$retro-shadow: rgba(0, 0, 0, 0.3);
+
+@mixin pixel-borders($color: $retro-dark) {
+  border: 4px solid $color;
+  border-image-slice: 2;
+  border-image-width: 2;
+  border-image-outset: 0;
+  border-image-source: url('data:image/svg+xml;utf8,<svg width="4" height="4" viewBox="0 0 4 4" xmlns="http://www.w3.org/2000/svg"><rect width="4" height="4" fill="#{$color}"/><rect x="1" y="1" width="2" height="2" fill="none"/></svg>');
+}
+
+@mixin pixel-shadow {
+  box-shadow: 4px 4px 0px $retro-shadow;
+}
+
+@mixin pixel-hover {
+  transition: transform 0.1s steps(2);
+  &:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px $retro-shadow;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="16" height="16" fill="transparent"/><rect x="0" y="0" width="4" height="4" fill="black"/><rect x="4" y="4" width="4" height="4" fill="black"/><rect x="8" y="8" width="4" height="4" fill="black"/></svg>'), pointer;
+  }
+  &:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px $retro-shadow;
+  }
+}
+
+* {
+  font-family: 'Press Start 2P', cursive;
+  image-rendering: pixelated;
+}
+
+.retro-deck-builder {
+  min-height: 100vh;
+  background-color: $retro-bg;
+  background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0),
+    linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+  color: $retro-dark;
+  padding-bottom: 2rem;
+}
+
+.pixel-header {
+  background-color: $retro-blue;
+  border-bottom: 4px solid $retro-gold;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  @include pixel-shadow;
+  margin-bottom: 1.5rem;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .back-button {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    background: $retro-gold;
+    color: $retro-dark;
+    text-decoration: none;
+    border: 4px solid $retro-dark;
+    font-size: 0.8rem;
+    @include pixel-shadow;
+    @include pixel-hover;
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .pokemon-text {
+      color: #fff;
+      font-size: 1.25rem;
+      text-shadow: 2px 2px 0px $retro-dark;
+    }
+
+    .tcg-text {
+      color: $retro-gold;
+      font-size: 0.85rem;
+      text-shadow: 2px 2px 0px $retro-dark;
+    }
+  }
+
+  .header-info {
+    text-align: right;
+
+    p {
+      margin: 0 0 0.4rem;
+      color: #f5f5f5;
+      font-size: 0.6rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: $retro-gold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  }
+}
+
+.builder-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1.3fr) minmax(24rem, 0.7fr);
+  align-items: start;
+  margin: 0 auto;
+  max-width: 1320px;
+  padding: 0 2rem;
+}
+
+.builder-panel {
+  background: rgba(255, 255, 255, 0.92);
+  padding: 1rem;
+  @include pixel-borders();
+  @include pixel-shadow;
+  min-width: 0;
+  align-self: start;
+}
+
+.builder-panel--catalog {
+  overflow: hidden;
+}
+
+// Dark mode toggle
+.dark-mode-toggle {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid $retro-dark;
+  cursor: pointer;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .toggle-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+}
+
+.dark-mode {
+  &.retro-deck-builder {
+    background-color: #0d0d1a;
+    background-image:
+      linear-gradient(45deg, #15152a 25%, transparent 25%, transparent 75%, #15152a 75%, #15152a),
+      linear-gradient(45deg, #15152a 25%, transparent 25%, transparent 75%, #15152a 75%, #15152a);
+    color: #e0e0e0;
+  }
+
+  .builder-panel {
+    background: rgba(26, 26, 46, 0.95);
+  }
+
+  .header-info p { color: #bbb; }
+
+  .dark-mode-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #666;
+
+    &:hover { background: rgba(255, 255, 255, 0.3); }
+  }
+
+  .pixel-header .back-button,
+  .primary-button {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="16" height="16" fill="transparent"/><rect x="0" y="0" width="4" height="4" fill="white"/><rect x="4" y="4" width="4" height="4" fill="white"/><rect x="8" y="8" width="4" height="4" fill="white"/></svg>'), pointer;
+  }
+}
+
+@media (max-width: 900px) {
+  .pixel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .builder-grid {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+
+  .header-info {
+    text-align: left;
+  }
+}

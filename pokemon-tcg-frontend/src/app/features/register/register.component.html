@@ -1,0 +1,117 @@
+<div class="pixel-login-container" [class.dark-mode]="darkMode">
+  <div class="pixel-header">
+    <div class="logo-section">
+      <div class="pokemon-title">POK<span class="accent-e">E</span>MON</div>
+      <div class="tcg-title">TCG ARENA</div>
+    </div>
+    <button class="dark-mode-toggle" (click)="toggleDarkMode()" [title]="darkMode ? 'Modo claro' : 'Modo oscuro'">
+      <span class="toggle-icon">{{ darkMode ? '☀️' : '🌙' }}</span>
+    </button>
+  </div>
+
+  <div class="login-content">
+    <div class="login-wrapper">
+      <div class="pixel-card welcome-card">
+        <div class="card-icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="trainer-icon">
+            <!-- Borde/Tarjeta base -->
+            <rect x="15" y="15" width="70" height="70" fill="#222"/>
+            <rect x="19" y="19" width="62" height="62" fill="#fff"/>
+            <!-- Cabecera dorada de la tarjeta -->
+            <rect x="19" y="19" width="62" height="16" fill="#FFCB05"/>
+            <!-- Foto del Entrenador (Silueta Pixelada) -->
+            <rect x="25" y="42" width="24" height="28" fill="#222"/>
+            <rect x="27" y="44" width="20" height="24" fill="#e8e8e8"/>
+            <!-- Cabello -->
+            <rect x="31" y="47" width="12" height="6" fill="#333"/>
+            <!-- Cara -->
+            <rect x="33" y="52" width="8" height="10" fill="#FFDBAC"/>
+            <!-- Ropa -->
+            <rect x="29" y="62" width="16" height="6" fill="#3949AB"/>
+            
+            <!-- Símbolo '+' en Pixel Art (Verde Éxito) -->
+            <!-- Línea horizontal -->
+            <rect x="56" y="51" width="16" height="6" fill="#4CAF50"/>
+            <!-- Línea vertical -->
+            <rect x="61" y="46" width="6" height="16" fill="#4CAF50"/>
+          </svg>
+        </div>
+        <h2>Nueva cuenta</h2>
+        <p>Crea tu entrenador para guardar mazos</p>
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="login-form">
+        <div class="form-group">
+          <label for="username" class="pixel-label">NOMBRE DE ENTRENADOR</label>
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              class="pixel-input"
+              placeholder="Ej: Ash, Misty"
+              [class.error]="username?.invalid && username?.touched"
+              maxlength="20"
+            />
+            <div class="input-indicator">{{ username?.value?.length || 0 }}/20</div>
+          </div>
+          <div class="error-message" *ngIf="username?.invalid && username?.touched">
+            <span *ngIf="username?.hasError('required')">Se requiere un nombre</span>
+            <span *ngIf="username?.hasError('minlength')">Mínimo 3 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email" class="pixel-label">EMAIL</label>
+          <div class="input-wrapper">
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="pixel-input"
+              placeholder="tu@email.com"
+              [class.error]="email?.invalid && email?.touched"
+            />
+          </div>
+          <div class="error-message" *ngIf="email?.invalid && email?.touched">
+            <span *ngIf="email?.hasError('required')">Se requiere un email</span>
+            <span *ngIf="email?.hasError('email')">Email inválido</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="pixel-label">CONTRASEÑA</label>
+          <div class="input-wrapper">
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="pixel-input"
+              placeholder="Minimo 6 caracteres"
+              [class.error]="password?.invalid && password?.touched"
+            />
+          </div>
+          <div class="error-message" *ngIf="password?.invalid && password?.touched">
+            <span *ngIf="password?.hasError('required')">Se requiere una contraseña</span>
+            <span *ngIf="password?.hasError('minlength')">Mínimo 6 caracteres</span>
+          </div>
+        </div>
+
+        <div class="error-box" *ngIf="errorMessage">
+          <p>{{ errorMessage }}</p>
+        </div>
+
+        <button type="submit" class="pixel-button submit-button" [disabled]="registerForm.invalid || isLoading">
+          <span *ngIf="!isLoading">CREAR CUENTA</span>
+          <span *ngIf="isLoading">CREANDO...</span>
+        </button>
+
+        <a class="alt-link" [routerLink]="['/login']">Ya tengo cuenta, iniciar sesión</a>
+      </form>
+    </div>
+  </div>
+
+  <div class="pixel-footer">
+    <p>© 2026 Pokémon Trading Card Game Arena • v1.0</p>
+  </div>
+</div>

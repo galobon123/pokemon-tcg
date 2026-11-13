@@ -1,0 +1,171 @@
+$retro-gold: #FFCB05;
+$retro-board: #16213e;
+$retro-dark: #0a0a1a;
+$retro-light: #e0e0e0;
+$retro-metal: #374151;
+$retro-red: #b71c1c;
+$shadow-soft: rgba(0, 0, 0, 0.5);
+
+@mixin pixel-borders($color: $retro-dark, $thick: 3px) {
+  border: $thick solid $color;
+  border-image-slice: 2;
+  border-image-width: 2;
+  border-image-outset: 0;
+  border-image-source: url('data:image/svg+xml;utf8,<svg width="4" height="4" viewBox="0 0 4 4" xmlns="http://www.w3.org/2000/svg"><rect width="4" height="4" fill="#{$color}"/><rect x="1" y="1" width="2" height="2" fill="none"/></svg>');
+}
+
+@mixin pixel-shadow($color: $shadow-soft) {
+  box-shadow: 4px 4px 0px $color;
+}
+
+:host {
+  font-family: 'Press Start 2P', cursive;
+}
+
+:host * {
+  image-rendering: pixelated;
+}
+
+.deck-view-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.deck-view-panel {
+  width: min(520px, 90vw);
+  max-height: 70vh;
+  background: $retro-board;
+  @include pixel-borders($retro-gold, 3px);
+  @include pixel-shadow;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  outline: none;
+}
+
+.deck-view-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: space-between;
+  border-bottom: 1px dashed $retro-metal;
+  padding-bottom: 0.3rem;
+}
+
+.deck-view-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.deck-view-label {
+  font-size: 0.5rem;
+  color: $retro-gold;
+  letter-spacing: 1px;
+}
+
+.deck-view-name {
+  font-size: 0.6rem;
+  color: $retro-light;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deck-view-count {
+  font-size: 0.55rem;
+  color: $retro-light;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid $retro-metal;
+  padding: 0.15rem 0.35rem;
+}
+
+.deck-view-close {
+  background: $retro-red;
+  color: white;
+  @include pixel-borders(black, 3px);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.5rem;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px black;
+  transition: transform 0.1s steps(2);
+
+  &:hover { background-color: lighten($retro-red, 10%); }
+  &:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px black; }
+}
+
+.deck-view-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-height: 0;
+}
+
+.deck-view-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.deck-view-card {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 2px solid $retro-metal;
+  padding: 0.2rem;
+}
+
+.deck-view-image {
+  width: 40px;
+  height: 56px;
+  object-fit: cover;
+  border: 2px solid $retro-dark;
+  background: $retro-dark;
+}
+
+.deck-view-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.deck-view-card-name {
+  font-size: 0.55rem;
+  color: $retro-light;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deck-view-card-type {
+  font-size: 0.45rem;
+  color: $retro-gold;
+}
+
+.deck-view-qty {
+  font-size: 0.55rem;
+  color: $retro-light;
+  background: black;
+  border: 1px solid $retro-metal;
+  padding: 0.1rem 0.25rem;
+}
+
+.deck-view-state {
+  font-size: 0.55rem;
+  color: $retro-light;
+  text-align: center;
+  padding: 0.5rem 0.2rem;
+}
+
+.deck-view-error {
+  color: lighten($retro-red, 20%);
+}

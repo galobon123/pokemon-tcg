@@ -1,0 +1,1620 @@
+<div class="retro-arena" [class.screen-shake]="screenShake">
+  <div class="screen-flash" *ngIf="screenFlash"></div>
+  <!-- Waiting overlay -->
+  <div class="waiting-overlay" *ngIf="waitingForOpponent">
+    <div class="waiting-content">
+      <div class="waiting-spinner">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" alt="Waiting" class="waiting-ball">
+      </div>
+      <h2 class="waiting-title">ESPERANDO OPONENTE</h2>
+      <p class="waiting-sub">Compartí el código de la partida para que otro jugador se una</p>
+      <div class="waiting-code" *ngIf="gameId">
+        <span class="code-label">CÓDIGO</span>
+        <span class="code-value">{{ gameId }}</span>
+      </div>
+      <button class="pixel-btn cancel-btn waiting-back-btn" (click)="goToLobby()">
+        VOLVER AL LOBBY
+      </button>
+    </div>
+  </div>
+
+  <!-- Mulligan overlay -->
+  <div class="mulligan-overlay" *ngIf="showMulliganOverlay" [class.mulligan-phase-shuffle]="mulliganPhase === 'shuffle'" [class.mulligan-phase-draw]="mulliganPhase === 'draw'" [class.mulligan-phase-extra]="mulliganPhase === 'extra'">
+    <div class="mulligan-modal">
+      <div class="mulligan-header">
+        <span class="mulligan-icon" [class.mulligan-icon-bounce]="mulliganPhase === 'shuffle'">🔄</span>
+        <h2>MULLIGAN</h2>
+      </div>
+      <div class="mulligan-body">
+
+        <!-- ── Rival revealed hand ── -->
+        <div class="mulligan-row" *ngIf="opponentMulligans > 0">
+          <div class="mulligan-player-label">MANO REVELADA DEL RIVAL</div>
+
+          <div class="mulligan-cards-strip" *ngIf="opponentRevealedHand.length > 0">
+            <div class="mulligan-card-slot" *ngFor="let card of opponentRevealedHand; let i = index"
+                 [class.mulligan-card-revealed]="mulliganCardsRevealed"
+                 [style.animation-delay]="staggerDelay(i)">
+              <img [src]="resolveCardImageFromInfo(card)" [alt]="card.name" class="mulligan-card-img" (error)="onMulliganImgError($event)">
+              <span class="mulligan-card-name">{{ card.name }}</span>
+            </div>
+          </div>
+          <div class="mulligan-cards-strip mulligan-cards-fallback" *ngIf="opponentRevealedHand.length === 0">
+            <div class="mulligan-card-slot mulligan-card-back" *ngFor="let _ of [].constructor(7); let i = index"
+                 [class.mulligan-card-revealed]="mulliganCardsRevealed"
+                 [style.animation-delay]="staggerDelay(i)">
+              <div class="card-back-placeholder"></div>
+              <span class="mulligan-card-name">?</span>
+            </div>
+          </div>
+
+          <div class="mulligan-shuffle-zone" *ngIf="mulliganPhase === 'shuffle' || mulliganPhase === 'draw' || mulliganPhase === 'extra'">
+            <div class="mulligan-shuffle-text">
+              <span class="shuffle-arrow" *ngIf="mulliganPhase === 'shuffle'">🔄 Barajando... {{ opponentMulligans }} vez/veces</span>
+              <span class="shuffle-arrow" *ngIf="mulliganPhase === 'draw'">📥 Robando 7 cartas nuevas...</span>
+              <span class="shuffle-arrow" *ngIf="mulliganPhase === 'extra'">➕ {{ extraCardsForMe }} carta(s) extra por compensación</span>
+            </div>
+          </div>
+
+          <p *ngIf="mulliganPhase === 'extra' || mulliganPhase === 'done'" class="mulligan-consequence">
+            El rival barajó <strong>{{ opponentMulligans }} vez/veces</strong>.
+            Robaste <strong>{{ extraCardsForMe }} carta(s) extra</strong>.
+          </p>
+        </div>
+
+        <!-- ── Your mulligans ── -->
+        <div class="mulligan-row" *ngIf="myMulligans > 0">
+          <div class="mulligan-player-label">TU MANO INICIAL</div>
+
+          <div class="mulligan-cards-strip" *ngIf="myRevealedHand.length > 0">
+            <div class="mulligan-card-slot" *ngFor="let card of myRevealedHand; let i = index"
+                 [class.mulligan-card-revealed]="mulliganCardsRevealed"
+                 [style.animation-delay]="staggerDelay(i)">
+              <img [src]="resolveCardImageFromInfo(card)" [alt]="card.name" class="mulligan-card-img" (error)="onMulliganImgError($event)">
+              <span class="mulligan-card-name">{{ card.name }}</span>
+            </div>
+          </div>
+
+          <p>No contenía Pokémon Básicos. Barajaste <strong>{{ myMulligans }} vez/veces</strong>.</p>
+          <p class="mulligan-consequence">El rival robó <strong>{{ extraCardsForOpponent }} carta(s) extra</strong>.</p>
+        </div>
+
+      </div>
+      <div class="mulligan-footer">
+        <button class="pixel-btn mulligan-continue-btn" (click)="dismissMulligan()">
+          CONTINUAR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game over overlay -->
+  <div class="gameover-overlay" *ngIf="gameOverMessage">
+    <div class="gameover-modal">
+      <div class="gameover-icon">🏆</div>
+      <h2 class="gameover-title">{{ gameOverMessage }}</h2>
+      <p class="gameover-sub">Serás redirigido al lobby en</p>
+      <div class="gameover-timer">{{ gameOverTimer }}</div>
+      <p class="gameover-sub">segundos</p>
+    </div>
+  </div>
+
+  <!-- Coin flip overlay -->
+  <div class="coinflip-overlay" *ngIf="showCoinSideChoice">
+    <div class="coinflip-modal">
+      <h2 class="coinflip-title">ELEGÍ CARA O CRUZ</h2>
+      <p class="coinflip-choice-text">Si acertás, vos elegís quién empieza</p>
+      <div class="coinflip-choice-buttons">
+        <button class="pixel-btn coinflip-choice-btn first-btn" (click)="chooseCoinSide('HEADS')">
+          CARA
+        </button>
+        <button class="pixel-btn coinflip-choice-btn second-btn" (click)="chooseCoinSide('TAILS')">
+          CRUZ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coin flip waiting overlay (Player 2 waits for Player 1 to flip) -->
+  <div class="coinflip-overlay" *ngIf="showCoinFlipWaiting">
+    <div class="coinflip-modal">
+      <h2 class="coinflip-title">ESPERANDO LANZAMIENTO</h2>
+      <p class="coinflip-choice-text">El Jugador 1 está eligiendo cara o cruz...</p>
+      <div class="waiting-spinner">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" alt="Waiting" class="waiting-ball">
+      </div>
+    </div>
+  </div>
+
+  <div class="coinflip-overlay" *ngIf="showCoinFlip">
+    <div class="coinflip-modal">
+      <h2 class="coinflip-title">LANZANDO MONEDA...</h2>
+      <div class="coinflip-coin" [class.heads]="coinFlipResult === 'HEADS'" [class.tails]="coinFlipResult === 'TAILS'" [class.reveal]="coinFlipResult">
+        <div class="coinflip-face coinflip-front">
+          <div class="coin-symbol">⚡</div>
+        </div>
+        <div class="coinflip-face coinflip-back">
+          <div class="coin-symbol">✦</div>
+        </div>
+      </div>
+      <div class="coinflip-result" *ngIf="coinFlipResult">
+        <span class="coinflip-label" [ngClass]="{'coin-heads': coinFlipResult === 'HEADS', 'coin-tails': coinFlipResult === 'TAILS'}">
+          {{ coinFlipResult === 'HEADS' ? 'CARA' : 'CRUZ' }}
+        </span>
+
+        <ng-container *ngIf="!showCoinFlipChoice">
+          <p class="coinflip-winner" *ngIf="isCoinFlipWinner">
+            ¡Ganaste el lanzamiento!
+          </p>
+          <p class="coinflip-winner" *ngIf="!isCoinFlipWinner">
+            {{ coinFlipWinnerName }} ganó el lanzamiento
+          </p>
+        </ng-container>
+
+        <ng-container *ngIf="showCoinFlipChoice">
+          <p class="coinflip-choice-text">¿Querés ir primero o segundo?</p>
+          <div class="coinflip-choice-buttons">
+            <button class="pixel-btn coinflip-choice-btn first-btn" (click)="chooseFirst(true)" [disabled]="choosingFirst">
+              IR PRIMERO
+            </button>
+            <button class="pixel-btn coinflip-choice-btn second-btn" (click)="chooseFirst(false)" [disabled]="choosingFirst">
+              IR SEGUNDO
+            </button>
+          </div>
+        </ng-container>
+
+        <p class="coinflip-waiting" *ngIf="!isCoinFlipWinner && !showCoinFlipChoice">
+          Esperando que elija...
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attack coin flip overlay -->
+  <div class="coinflip-overlay" *ngIf="showAttackCoinFlip">
+    <div class="coinflip-modal">
+      <h2 class="coinflip-title">{{ attackCoinFlipAttackName }}</h2>
+      <p class="coinflip-choice-text">
+        {{ attackCoinFlipResolved ? 'Resultado confirmado por el servidor' : 'Lanzando ' + attackCoinFlipCount + ' moneda' + (attackCoinFlipCount !== 1 ? 's' : '') + '...' }}
+      </p>
+      <ng-container *ngIf="attackCoinFlipAnimating || (attackCoinFlipResults.length > 0 && !attackCoinFlipAnimating)">
+        <div class="coinflip-coin"
+             [class.heads]="!attackCoinFlipAnimating && attackCoinFlipResults.length > 0 && attackCoinFlipResults[attackCoinFlipResults.length - 1]"
+             [class.tails]="!attackCoinFlipAnimating && attackCoinFlipResults.length > 0 && !attackCoinFlipResults[attackCoinFlipResults.length - 1]"
+             [class.reveal]="attackCoinFlipResults.length > 0 && !attackCoinFlipAnimating">
+          <div class="coinflip-face coinflip-front">
+            <div class="coin-symbol">⚡</div>
+          </div>
+          <div class="coinflip-face coinflip-back">
+            <div class="coin-symbol">✦</div>
+          </div>
+        </div>
+      </ng-container>
+      <div class="attack-flip-results" *ngIf="attackCoinFlipResults.length > 0">
+        <div class="flip-result-line" *ngFor="let r of attackCoinFlipResults; let i = index"
+             [class.flip-heads]="r" [class.flip-tails]="!r">
+          Moneda {{ i + 1 }}: {{ r ? 'CARA' : 'CRUZ' }}
+        </div>
+        <div class="flip-heads-count" *ngIf="attackCoinFlipResults.length === attackCoinFlipCount && !attackCoinFlipAnimating">
+          {{ flipEffectDescription }}
+        </div>
+      </div>
+      <button class="pixel-btn coinflip-choice-btn" style="margin-top: 12px;" (click)="cancelAttackCoinFlip()">
+        {{ attackCoinFlipResolved ? 'CERRAR' : 'CANCELAR' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Trainer coin flip overlay -->
+  <div class="coinflip-overlay" *ngIf="showTrainerCoinFlip">
+    <div class="coinflip-modal">
+      <h2 class="coinflip-title">{{ selectedTrainerCard?.name ?? 'Entrenador' }}</h2>
+      <p class="coinflip-choice-text">
+        Lanzando una moneda...
+      </p>
+      <ng-container *ngIf="trainerCoinFlipAnimating || trainerCoinFlipDone">
+        <div class="coinflip-coin"
+             [class.heads]="trainerCoinFlipDone && trainerCoinFlipResults[0]"
+             [class.tails]="trainerCoinFlipDone && !trainerCoinFlipResults[0]"
+             [class.reveal]="trainerCoinFlipDone">
+          <div class="coinflip-face coinflip-front">
+            <div class="coin-symbol">⚡</div>
+          </div>
+          <div class="coinflip-face coinflip-back">
+            <div class="coin-symbol">✦</div>
+          </div>
+        </div>
+      </ng-container>
+      <div class="attack-flip-results" *ngIf="trainerCoinFlipDone">
+        <div class="flip-result-line"
+             [class.flip-heads]="trainerCoinFlipResults[0]"
+             [class.flip-tails]="!trainerCoinFlipResults[0]">
+          {{ trainerCoinFlipResults[0] ? 'CARA' : 'CRUZ' }}
+        </div>
+      </div>
+      <button class="pixel-btn coinflip-choice-btn" style="margin-top: 12px;" *ngIf="trainerCoinFlipDone" (click)="confirmTrainerCoinFlip()">
+        CONFIRMAR
+      </button>
+      <button class="pixel-btn coinflip-choice-btn" style="margin-top: 12px;" *ngIf="!trainerCoinFlipDone" (click)="cancelTrainerCoinFlip()">
+        CANCELAR
+      </button>
+    </div>
+  </div>
+
+  <!-- Between-turns checkup banner -->
+  <div class="checkup-banner" *ngIf="showCheckupBanner">{{ checkupBannerText }}</div>
+
+  <!-- Between-turns checkup coin (reuses coinflip overlay visuals) -->
+  <div class="coinflip-overlay" *ngIf="showCheckupCoin">
+    <div class="coinflip-modal">
+      <h2 class="coinflip-title">{{ checkupCoinTitle }}</h2>
+      <p class="coinflip-choice-text" *ngIf="checkupCoinAnimating">Lanzando moneda...</p>
+      <div class="coinflip-coin"
+           [class.heads]="checkupCoinRevealed && checkupCoinHeads"
+           [class.tails]="checkupCoinRevealed && !checkupCoinHeads"
+           [class.reveal]="checkupCoinRevealed">
+        <div class="coinflip-face coinflip-front">
+          <div class="coin-symbol">⚡</div>
+        </div>
+        <div class="coinflip-face coinflip-back">
+          <div class="coin-symbol">✦</div>
+        </div>
+      </div>
+      <div class="flip-heads-count" *ngIf="checkupCoinRevealed"
+           [class.flip-heads]="checkupCoinHeads" [class.flip-tails]="!checkupCoinHeads">
+        {{ checkupCoinHeads ? 'CARA' : 'CRUZ' }} — {{ checkupCoinOutcome }}
+      </div>
+    </div>
+  </div>
+
+  <header class="pixel-header" [class.my-turn]="isMyTurn">
+    <div class="logo">
+      <span class="pokemon-text">POKEMON</span>
+      <span class="tcg-text">TCG ARENA</span>
+    </div>
+    <div class="header-center">
+      <div class="turn-badge" [class.my-turn]="isMyTurn">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/vs-seeker.png" alt="VS" class="pixel-icon-tiny">
+        <span>TURNO {{ turnNumber }}</span>
+        <span class="phase-badge">{{ currentPhase || '—' }}</span>
+        <span class="turn-indicator" [class.your-turn]="isMyTurn" [class.opp-turn]="!isMyTurn">
+          {{ isMyTurn ? 'TU TURNO' : 'TURNO DEL RIVAL' }}
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="action-error" *ngIf="actionError">{{ actionError }}</span>
+      <span class="energy-done-badge" *ngIf="energyAttachedThisTurn && isMyTurn && currentPhase === 'MAIN'">
+        ⚡ ENERGÍA USADA
+      </span>
+      <button class="draw-btn" *ngIf="currentPhase === 'DRAW' && isMyTurn" [disabled]="!canDraw" (click)="drawCard()">
+        {{ drawing ? 'ROBANDO…' : 'ROBAR CARTA' }}
+      </button>
+      <button class="concede-btn" (click)="concede()">RENDIRSE</button>
+    </div>
+
+    </header>
+
+  <!-- Setup phase banner -->
+  <div class="setup-banner" *ngIf="isSetupMode && !waitingForOpponent">
+    <div class="setup-banner-inner setup-countdown" *ngIf="setupCountdownSeconds > 0">
+      <span class="setup-icon">⏰</span>
+      <span class="setup-text"><strong>{{ setupCountdownSeconds }}s</strong> para completar el setup</span>
+    </div>
+    <div class="setup-banner-inner" *ngIf="!setupConfirmed && !player.active">
+      <span class="setup-icon">⚔</span>
+      <span class="setup-text">Colocá un Pokémon Básico en el ACTIVO — Podés poner más en la BANCA después</span>
+    </div>
+    <div class="setup-banner-inner" *ngIf="!setupConfirmed && player.active">
+      <span class="setup-icon">⚔</span>
+      <span class="setup-text">Colocá Pokémon Básico en la BANCA (opcional) y luego CONFIRMÁ tu mano</span>
+    </div>
+    <div class="setup-banner-inner setup-waiting" *ngIf="setupConfirmed">
+      <span class="setup-icon">⏳</span>
+      <span class="setup-text">Esperando que el otro jugador confirme su mano...</span>
+    </div>
+  </div>
+
+  <!-- Sandbox (Sala de Práctica) banner -->
+  <div class="setup-banner sandbox-banner" *ngIf="sandboxMode">
+    <div class="setup-banner-inner">
+      <span class="setup-icon">🧪</span>
+      <span class="setup-text">SALA DE PRÁCTICA — Armá cualquier situación. Sacá cartas de tu mazo o de todo el catálogo, colocalas en tu lado o en el rival. No se guarda en el historial.</span>
+      <button class="pixel-btn sandbox-pick-btn" (click)="openSandboxPicker()">🃏 SACAR CARTA</button>
+      <button class="pixel-btn sandbox-pass-btn" (click)="passTurnSandbox()">⏭ PASAR TURNO</button>
+    </div>
+  </div>
+
+  <!-- Ability target mode banner -->
+  <div class="ability-target-banner" *ngIf="abilityMode">
+    <div class="ability-target-inner">
+      <span class="ability-target-text">Seleccioná un Pokémon objetivo para <strong>{{ pendingAbilityName }}</strong></span>
+      <div class="ability-target-actions">
+        <button class="pixel-btn ability-no-target-btn" (click)="useAbilityWithoutTarget()">USAR SIN OBJETIVO</button>
+        <button class="pixel-btn ability-cancel-btn" (click)="cancelAbilityMode()">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="arena-board">
+
+    <!-- ========== OPONENTE ========== -->
+    <section class="player-field opponent-field">
+      <div class="player-tag-row">
+        <img [src]="opponent.avatar" alt="Rival" class="pixel-avatar-xs">
+        <span class="tag-name">{{ opponent.name }}</span>
+        <span class="tag-hand">MANO: {{ opponentHandCount }}</span>
+      </div>
+
+      <div class="field-body">
+        <!-- Mazo + Descarte del oponente -->
+        <aside class="field-sidebar deck-sidebar">
+          <div class="pile-block">
+            <div class="pile-card card-back deck-back"></div>
+            <span class="pile-label">MAZO</span>
+            <span class="pile-count">{{ opponent.deckCount }}</span>
+          </div>
+          <div class="pile-block">
+            <div class="pile-card card-back discard-back"></div>
+            <span class="pile-label">DESCARTE</span>
+            <span class="pile-count">{{ opponentDiscardCount }}</span>
+          </div>
+        </aside>
+
+        <!-- CENTRO oponente: Banca (arriba) + Activo (abajo) -->
+        <div class="field-center">
+          <div class="zone-group">
+            <span class="zone-label">BANCA</span>
+            <div class="bench-strip">
+              <div class="bench-slot" *ngFor="let poke of opponent.bench; let i = index">
+                <ng-container *ngIf="poke; else emptyBenchOpp">
+                     <div class="slot-card bench-card opp-bench-card" (click)="abilityMode ? selectAbilityTarget(slotForBench(i), opponentPlayerId!) : toggleCardPreview(poke)" [class.ability-target-glow]="abilityMode">
+                      <div class="tcg-card-inner">
+                        <div class="energy-badge" *ngIf="opponentBenchEnergies[i].length > 0">
+                          <img *ngFor="let g of groupedOpponentBenchEnergies(i); trackBy: trackByGroup"
+                               [src]="energyImage(g.energyType)"
+                               class="energy-icon"
+                               [title]="g.energyType + ' x' + g.count">
+                          <span class="energy-badge-count">{{ opponentBenchEnergies[i].length }}</span>
+                        </div>
+                        <div class="tool-badge" *ngIf="opponentToolNameForSlot(slotForBench(i))" [title]="opponentToolNameForSlot(slotForBench(i))">
+                          <img [src]="opponentToolImageForSlot(slotForBench(i))" alt="Tool" class="tool-icon">
+                        </div>
+                         <img [src]="poke.image" [alt]="poke.name" class="tcg-card-art">
+                         <div class="tcg-card-footer">
+                           <span class="tcg-card-name">{{ poke.name }}</span>
+                         </div>
+                         <div class="damage-counter-badge" *ngIf="getBenchDamage(opponentPlayerId, slotForBench(i)) > 0">
+                           {{ getBenchDamage(opponentPlayerId, slotForBench(i)) }}
+                         </div>
+                       </div>
+                       <div class="reveal-back"
+                            *ngIf="revealPhase !== 'idle' && revealPhase !== 'done'"
+                            [class.reveal-flipping]="revealPhase === 'revealing'"
+                            [style.--reveal-order]="getRevealOrder('opponent', 'bench', i)">
+                       </div>
+                     </div>
+                 </ng-container>
+                 <ng-template #emptyBenchOpp>
+                  <div class="slot-card bench-card empty-slot">
+                    <span class="slot-placeholder">[{{ i + 1 }}]</span>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+
+          <div class="zone-group">
+            <span class="zone-label">ACTIVO</span>
+            <div class="active-spot">
+              <ng-container *ngIf="opponent.active; else noActiveOpp">
+                 <div class="slot-card active-card opp-active" (click)="abilityMode ? selectAbilityTarget('ACTIVE', opponentPlayerId!) : toggleCardPreview(opponent.active)"
+                    [class.ability-target-glow]="abilityMode"
+                    [class.attack-hit]="damageAnimationValue !== null && damageAnimationTarget === 'opp'">
+                  <div class="tcg-card-inner active-inner">
+                    <div class="damage-animation" *ngIf="damageAnimationValue !== null && damageAnimationTarget === 'opp'">
+                      <span class="damage-number">-{{ damageAnimationValue }}</span>
+                    </div>
+                    <div class="damage-animation checkup-damage" *ngIf="checkupDamageFloat !== null && checkupDamageTarget === 'opp'">
+                      <span class="damage-number">-{{ checkupDamageFloat }}</span>
+                    </div>
+                    <div class="damage-counter-badge" *ngIf="opponentActiveDamage > 0">{{ opponentActiveDamage }}</div>
+                    <div class="active-hp">{{ currentHp(opponent.active.hp, opponentActiveDamage) }} <span class="hp-label">HP</span></div>
+                    <div class="hp-bar"><div class="hp-bar-fill" [style.width.%]="hpBarPercent(opponent.active.hp, opponentActiveDamage)"></div></div>
+                    <div class="status-badge" *ngIf="opponentStatus" [class]="'status-' + opponentStatus.toLowerCase()">{{ opponentStatus }}</div>
+                    <div class="energy-badge" *ngIf="opponentActiveEnergies.length > 0">
+                      <img *ngFor="let g of groupedOpponentActiveEnergies; trackBy: trackByGroup"
+                           [src]="energyImage(g.energyType)"
+                           class="energy-icon"
+                           [title]="g.energyType + ' x' + g.count">
+                      <span class="energy-badge-count">{{ opponentActiveEnergies.length }}</span>
+                    </div>
+                    <div class="tool-badge" *ngIf="opponentToolNameForSlot('ACTIVE')" [title]="opponentToolNameForSlot('ACTIVE')">
+                      <img [src]="opponentToolImageForSlot('ACTIVE')" alt="Tool" class="tool-icon">
+                    </div>
+                    <img [src]="opponent.active.image" [alt]="opponent.active.name" class="tcg-card-art active-art">
+                    <div class="tcg-card-footer">
+                      <span class="tcg-card-name">{{ opponent.active.name }}</span>
+                    </div>
+                  </div>
+                  <div class="reveal-back"
+                       *ngIf="revealPhase !== 'idle' && revealPhase !== 'done'"
+                       [class.reveal-flipping]="revealPhase === 'revealing'"
+                       [style.--reveal-order]="getRevealOrder('opponent', 'active', 0)">
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #noActiveOpp>
+                <div class="slot-card active-card empty-slot">
+                  <span class="slot-placeholder">ACTIVO</span>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Premios del oponente -->
+        <aside class="field-sidebar prize-sidebar">
+          <div class="pile-block prize-pile">
+            <div class="prize-stack-wrapper">
+              <div class="prize-card card-back prize-back" *ngFor="let _ of opponent.prizes"></div>
+            </div>
+            <span class="pile-label">PREMIO</span>
+            <span class="pile-count">{{ opponent.prizes.length }}</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ========== SEPARADOR CENTRAL ========== -->
+    <div class="stadium-row">
+      <div class="stadium-line"></div>
+      <ng-container *ngIf="stadium">
+        <div class="stadium-chip pixel-card">
+          <img [src]="stadium.image" [alt]="stadium.name" class="stadium-icon">
+          <span class="stadium-name">{{ stadium.name }}</span>
+          <span class="stadium-owner" *ngIf="stadiumOwnerName">({{ stadiumOwnerName }})</span>
+        </div>
+      </ng-container>
+      <div class="stadium-line"></div>
+    </div>
+
+    <div class="sudden-death-banner" *ngIf="isSuddenDeath">
+      ⚠ MUERTE SÚBITA — ¡El próximo KO define el ganador!
+    </div>
+
+    <!-- ========== JUGADOR ========== -->
+    <section class="player-field player-field-bottom" [class.my-turn]="isMyTurn">
+      <div class="player-tag-row">
+        <img [src]="player.avatar" alt="Tú" class="pixel-avatar-xs">
+        <span class="tag-name">{{ player.name }}</span>
+        <span class="tag-deck" *ngIf="player.deckName">MAZO: {{ player.deckName }}</span>
+        <button class="pixel-btn confirm-setup-btn setup-confirm-inline" *ngIf="canConfirmSetup" (click)="confirmSetup()">
+          CONFIRMAR
+        </button>
+        <button class="pixel-btn confirm-setup-btn setup-confirm-inline" *ngIf="canPassTurn && !endingTurn" (click)="passTurn()">
+          {{ currentPhase === 'MAIN' ? 'IR A ATAQUE' : 'NO ATACAR' }}
+        </button>
+      </div>
+
+      <div class="field-body">
+        <!-- Chat en tiempo real -->
+        <aside class="chat-sidebar">
+          <div class="chat-header">CHAT</div>
+          <div class="chat-messages" #chatMessagesContainer>
+            <div class="chat-msg" *ngFor="let msg of chatMessages"
+                 [class.chat-msg-self]="msg.playerId === myPlayerId">
+              <span class="chat-msg-author">{{ msg.playerName }}</span>
+              <span class="chat-msg-text">{{ msg.text }}</span>
+            </div>
+            <div class="chat-empty" *ngIf="chatMessages.length === 0">
+              <span>Sin mensajes</span>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input"
+                   type="text"
+                   placeholder="Escribí un mensaje..."
+                   [(ngModel)]="chatInput"
+                   (keydown.enter)="sendChatMessage()"
+                   [disabled]="!gameId"
+                   maxlength="200" />
+            <button class="chat-send-btn pixel-btn" (click)="sendChatMessage()" [disabled]="!chatInput.trim() || !gameId">
+              ENVIAR
+            </button>
+          </div>
+        </aside>
+
+        <!-- Premios del jugador -->
+        <aside class="field-sidebar prize-sidebar">
+          <div class="pile-block prize-pile">
+            <div class="prize-stack-wrapper">
+              <div class="prize-card card-back prize-back" *ngFor="let _ of player.prizes"></div>
+            </div>
+            <span class="pile-label">PREMIO</span>
+            <span class="pile-count">{{ player.prizes.length }}</span>
+          </div>
+        </aside>
+
+        <!-- CENTRO jugador: Activo (arriba) + Banca (abajo) -->
+        <div class="field-center">
+
+          <!-- DROP ZONE: Activo -->
+          <div class="zone-group">
+            <span class="zone-label">ACTIVO</span>
+            <div class="active-spot">
+              <ng-container *ngIf="player.active; else noActivePlayer">
+<div class="slot-card active-card player-active"
+                   id="active-drop-zone"
+                   cdkDropList
+                   cdkDropListSortingDisabled
+                   [cdkDropListData]="activeDropData"
+                   [cdkDropListEnterPredicate]="isReplacementPending ? acceptAnyBenchPokemonForReplacement : onlyBasicPokemonOrEnergy"
+                   [cdkDropListDisabled]="!isReplacementPending && !(isMyTurn && !isSetupMode) && !sandboxMode"
+                   (cdkDropListDropped)="onDropActive($event)"
+                    (click)="abilityMode ? selectAbilityTarget('ACTIVE', myPlayerId!) : toggleCardPreview(player.active)"
+                    [class.ability-target-glow]="abilityMode"
+                    [class.attack-lunge]="attackAnimating"
+                    [class.attack-hit]="damageAnimationValue !== null && damageAnimationTarget === 'me'">
+                  <div class="tcg-card-inner active-inner">
+                    <div class="damage-counter-badge" *ngIf="playerActiveDamage > 0">{{ playerActiveDamage }}</div>
+                    <div class="damage-animation" *ngIf="damageAnimationValue !== null && damageAnimationTarget === 'me'">
+                      <span class="damage-number">-{{ damageAnimationValue }}</span>
+                    </div>
+                    <div class="damage-animation checkup-damage" *ngIf="checkupDamageFloat !== null && checkupDamageTarget === 'me'">
+                      <span class="damage-number">-{{ checkupDamageFloat }}</span>
+                    </div>
+                    <div class="active-hp">{{ currentHp(player.active.hp, playerActiveDamage) }} <span class="hp-label">HP</span></div>
+                    <div class="hp-bar"><div class="hp-bar-fill" [style.width.%]="hpBarPercent(player.active.hp, playerActiveDamage)"></div></div>
+                    <div class="status-badge" *ngIf="playerStatus" [class]="'status-' + playerStatus.toLowerCase()">{{ playerStatus }}</div>
+                    <div class="tool-badge" *ngIf="toolNameForSlot('ACTIVE')" [title]="toolNameForSlot('ACTIVE')">
+                      <img [src]="toolImageForSlot('ACTIVE')" alt="Tool" class="tool-icon">
+                    </div>
+                                         <div class="energy-badge" *ngIf="playerActiveEnergies.length > 0">
+                      <img *ngFor="let g of groupedPlayerActiveEnergies; trackBy: trackByGroup"
+                           [src]="energyImage(g.energyType)"
+                           class="energy-icon"
+                           [title]="g.energyType + ' x' + g.count">
+                      <span class="energy-badge-count">{{ playerActiveEnergies.length }}</span>
+                    </div>
+                    <img [src]="player.active.image" [alt]="player.active.name" class="tcg-card-art active-art">
+                    <div class="tcg-card-footer">
+                      <span class="tcg-card-name">{{ player.active.name }}</span>
+                    </div>
+                    <div class="ko-floating-text" *ngIf="koNotification">{{ koNotification }}</div>
+                  </div>
+                  <div class="reveal-back"
+                       *ngIf="revealPhase !== 'idle' && revealPhase !== 'done'"
+                       [class.reveal-flipping]="revealPhase === 'revealing'"
+                       [style.--reveal-order]="getRevealOrder('me', 'active', 0)">
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #noActivePlayer>
+                <div
+                  class="slot-card active-card empty-slot drop-target-active"
+                  [class.replacement-target]="isReplacementPending"
+                  cdkDropList
+                  cdkDropListSortingDisabled
+                  [cdkDropListData]="activeDropData"
+                  [cdkDropListEnterPredicate]="isReplacementPending ? acceptAnyBenchPokemonForReplacement : onlyBasicPokemonDuringSetup"
+                  [cdkDropListDisabled]="!isReplacementPending && !isSetupMode && !sandboxMode"
+                  (cdkDropListDropped)="onDropActive($event)"
+                  id="active-drop-zone"
+                >
+                  <div class="drop-hint" *ngIf="!isReplacementPending">
+                    <span class="drop-arrow">↓</span>
+                    <span class="slot-placeholder">ACTIVO</span>
+                    <span class="drop-hint-sub">Pokémon Básico</span>
+                  </div>
+                  <div class="drop-hint" *ngIf="isReplacementPending && !isForcedSwitchPending">
+                    <span class="drop-arrow">↓</span>
+                    <span class="slot-placeholder">REEMPLAZAR ACTIVO</span>
+                    <span class="drop-hint-sub">Arrastrá un Pokémon de la BANCA</span>
+                  </div>
+                  <div class="drop-hint" *ngIf="isForcedSwitchPending">
+                    <span class="drop-arrow">↓</span>
+                    <span class="slot-placeholder">CAMBIAR ACTIVO</span>
+                    <span class="drop-hint-sub">El ataque rival te obliga a cambiar tu Activo</span>
+                  </div>
+                  <div class="ko-floating-text" *ngIf="koNotification">{{ koNotification }}</div>
+                </div>
+              </ng-template>
+            </div>
+            <div class="replacement-hint" *ngIf="isReplacementPending && !isForcedSwitchPending">
+              Arrastrá un Pokémon de la BANCA
+            </div>
+            <div class="replacement-hint forced-switch-hint" *ngIf="isForcedSwitchPending">
+              ¡Cambio forzado! Arrastrá un Pokémon de la BANCA
+            </div>
+          </div>
+          <div class="zone-group">
+            <span class="zone-label">BANCA</span>
+            <div class="bench-strip">
+              <div class="bench-slot" *ngFor="let poke of player.bench; let i = index"
+                   [class.replacement-highlight]="poke && isReplacementPending">
+                <ng-container *ngIf="poke; else emptyBenchPlayer">
+<div class="slot-card bench-card player-bench-card"
+                      [id]="'bench-drop-zone-' + i"
+                      cdkDropList
+                      cdkDropListSortingDisabled
+                      [cdkDropListData]="benchDropData[i]"
+                      [cdkDropListConnectedTo]="['active-drop-zone']"
+                      [cdkDropListEnterPredicate]="onlyBasicPokemonOrEnergy"
+                      [cdkDropListDisabled]="isReplacementPending ? false : (!(isMyTurn && !isSetupMode) && !sandboxMode)"
+                      (cdkDropListDropped)="onDropBench($event, i)"
+                       (click)="abilityMode ? selectAbilityTarget(slotForBench(i), myPlayerId!) : toggleCardPreview(poke)" [class.ability-target-glow]="abilityMode">
+                      <div class="tcg-card-inner"
+                           cdkDrag
+                           [cdkDragData]="poke"
+                           [cdkDragDisabled]="!isReplacementPending">
+                        <div class="energy-badge" *ngIf="playerBenchEnergies[i].length > 0">
+                          <img *ngFor="let g of groupedPlayerBenchEnergies(i); trackBy: trackByGroup"
+                               [src]="energyImage(g.energyType)"
+                               class="energy-icon"
+                               [title]="g.energyType + ' x' + g.count">
+                          <span class="energy-badge-count">{{ playerBenchEnergies[i].length }}</span>
+                        </div>
+                        <div class="tool-badge bench-tool-badge" *ngIf="toolNameForSlot(slotForBench(i))" [title]="toolNameForSlot(slotForBench(i))">
+                          <img [src]="toolImageForSlot(slotForBench(i))" alt="Tool" class="tool-icon">
+                        </div>
+                        <div class="bench-ability-badge" *ngFor="let ab of getAbilitiesForCard(poke); let aIdx = index"
+                             [class.ability-used]="isAbilityUsed(ab.name)"
+                             (click)="$event.stopPropagation(); canUseAbility && !isAbilityUsed(ab.name) && enterAbilityMode(poke, slotForBench(i), aIdx, ab.name)"
+                             title="{{ ab.name }}"
+                             [class.ability-target-glow]="abilityMode">
+                          <span class="bench-ability-name">{{ ab.name.substring(0, 4) }}</span>
+                        </div>
+                        <img [src]="poke.image" [alt]="poke.name" class="tcg-card-art">
+                        <div class="tcg-card-footer">
+                          <span class="tcg-card-name">{{ poke.name }}</span>
+                        </div>
+                         <div class="damage-counter-badge" *ngIf="getBenchDamage(myPlayerId, slotForBench(i)) > 0">
+                           {{ getBenchDamage(myPlayerId, slotForBench(i)) }}
+                         </div>
+                         <div *cdkDragPlaceholder class="bench-drag-placeholder"></div>
+                        <div *cdkDragPreview class="bench-drag-preview">
+                          <div class="tcg-card-inner">
+                            <img [src]="poke.image" [alt]="poke.name" class="tcg-card-art">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="reveal-back"
+                           *ngIf="revealPhase !== 'idle' && revealPhase !== 'done'"
+                           [class.reveal-flipping]="revealPhase === 'revealing'"
+                           [style.--reveal-order]="getRevealOrder('me', 'bench', i)">
+                      </div>
+                    </div>
+                </ng-container>
+                <ng-template #emptyBenchPlayer>
+                  <div
+                    class="slot-card bench-card empty-slot drop-target-bench"
+                    cdkDropList
+                    cdkDropListSortingDisabled
+                    [cdkDropListData]="benchDropData[i]"
+                    [cdkDropListConnectedTo]="['active-drop-zone']"
+                    [cdkDropListEnterPredicate]="onlyBasicPokemonDuringSetup"
+                    [cdkDropListDisabled]="isSetupMode ? !player.active : !canBenchInMain"
+                    (cdkDropListDropped)="onDropBench($event, i)"
+                    [id]="'bench-drop-zone-' + i"
+                  >
+                    <div class="drop-hint">
+                      <span class="drop-arrow">↓</span>
+                      <span class="slot-placeholder">[{{ i + 1 }}]</span>
+                    </div>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mazo + Descarte del jugador -->
+        <aside class="field-sidebar deck-sidebar">
+          <div
+            class="pile-block deck-pile"
+            [class.deck-shuffle-animating]="deckShuffleAnimating"
+            role="button"
+            tabindex="0"
+            aria-label="Ver mazo"
+            (click)="openDeckView()"
+            (keydown.enter)="openDeckView()"
+          >
+            <div class="pile-card card-back deck-back"></div>
+            <span class="pile-label">MAZO</span>
+            <span class="pile-count">{{ player.deckCount }}</span>
+          </div>
+          <div class="pile-block">
+            <div class="pile-card card-back discard-back"></div>
+            <span class="pile-label">DESCARTE</span>
+            <span class="pile-count">{{ playerDiscardCount }}</span>
+          </div>
+        </aside>
+
+        <!-- Panel ACCIONES -->
+        <aside class="actions-sidebar">
+          <div class="actions-title">ACCIONES</div>
+          <div class="actions-box actions-box-active" *ngIf="activeCardActions.length > 0; else noActions">
+            <div class="action-item"
+                 *ngFor="let item of activeCardActions"
+                 [class.action-attack]="item.type === 'attack'"
+                 [class.action-ability]="item.type === 'ability'"
+                 [class.action-retreat]="item.type === 'retreat'"
+                 [class.action-disabled]="item.disabled"
+                 [class.action-flip]="item.type === 'attack' && item.attack && attackNeedsCoinFlip(item.attack)"
+                 (click)="executeActionItem(item)">
+              <div class="action-cost" *ngIf="item.type === 'attack' && item.attack">
+                <span class="attack-cost-icon" *ngFor="let c of item.attack.cost"
+                      [style.color]="energyColor(c)">{{ energySymbol(c) }}</span>
+              </div>
+              <div class="action-info">
+                <span class="action-name">{{ item.name }}</span>
+                <span class="action-damage" *ngIf="item.type === 'attack' && item.attack?.damage && item.attack?.damage !== '0'">{{ item.attack?.damage }}</span>
+                <span class="action-retreat-cost" *ngIf="item.type === 'retreat'">
+                  <span class="retreat-cost-icons">{{ retreatCostSymbol(item.retreatCost ?? 0) }}</span>
+                  <span class="retreat-energies">{{ item.availableEnergies ?? 0 }} disp.</span>
+                </span>
+              </div>
+              <span class="action-afford" *ngIf="item.type === 'attack' && item.disabled">&#10007;</span>
+              <span class="action-afford-ok" *ngIf="item.type === 'attack' && !item.disabled">&#10003;</span>
+              <span class="ability-used-badge" *ngIf="item.type === 'ability' && item.disabled">USADA</span>
+              <span class="ability-use-icon" *ngIf="item.type === 'ability' && !item.disabled">▶</span>
+              <span class="action-afford" *ngIf="item.type === 'retreat' && item.disabled">&#10007;</span>
+              <span class="action-afford-ok" *ngIf="item.type === 'retreat' && !item.disabled">&#10003;</span>
+            </div>
+          </div>
+          <ng-template #noActions>
+            <div class="actions-box">
+              <span class="actions-empty">—</span>
+            </div>
+          </ng-template>
+          <div class="actions-title damage-title" *ngIf="attackResult">DAÑO</div>
+          <div class="damage-box" *ngIf="attackResult">
+            <div class="damage-row damage-base">
+              <span class="damage-label">Base</span>
+              <span class="damage-value">{{ attackResult.baseDamage }}</span>
+            </div>
+            <div class="damage-row damage-modifier" *ngFor="let mod of damageModifiers">
+              <span class="damage-label">{{ mod.label }}</span>
+              <span class="damage-value" [class.mod-positive]="mod.value > 0" [class.mod-negative]="mod.value < 0">
+                {{ mod.value > 0 ? '+' : '' }}{{ mod.value }}
+              </span>
+            </div>
+            <div class="damage-row damage-weakness" *ngIf="attackResult.weaknessMultiplier > 1">
+              <span class="damage-label">Debilidad</span>
+              <span class="damage-value damage-weakness-value">×{{ attackResult.weaknessMultiplier }}</span>
+            </div>
+            <div class="damage-row damage-resistance" *ngIf="attackResult.resistanceReduction > 0">
+              <span class="damage-label">Resistencia</span>
+              <span class="damage-value damage-resistance-value">−{{ attackResult.resistanceReduction }}</span>
+            </div>
+            <div class="damage-row damage-total">
+              <span class="damage-label">Total</span>
+              <span class="damage-value damage-total-value">{{ attackResult.damage }}</span>
+            </div>
+            <div class="damage-audit-toggle" (click)="showAuditTrail = !showAuditTrail">
+              <span class="audit-toggle-icon">{{ showAuditTrail ? '▼' : '▶' }}</span>
+              <span class="audit-toggle-label">Traza de cálculo</span>
+            </div>
+            <div class="damage-audit-list" *ngIf="showAuditTrail">
+              <div class="audit-entry" *ngFor="let entry of damageAuditEntries">{{ entry }}</div>
+              <div class="audit-empty" *ngIf="damageAuditEntries.length === 0">—</div>
+            </div>
+          </div>
+          <div class="actions-title actions-log-title">REGISTRO</div>
+          <div class="actions-log">
+            <div class="log-entry" *ngFor="let entry of actionLog">
+              <span class="log-player">{{ playerDisplayName(entry.playerId) }}</span>
+              <span class="log-action">{{ actionLabel(entry.action) }}</span>
+              <span class="log-result" *ngIf="entry.action === 'PLAY_TRAINER' && entry.payload?.['effectResult']">
+                {{ logTrainerResult(entry.payload['effectResult'], entry.payload['effectPayload']) }}
+              </span>
+            </div>
+            <div class="log-empty" *ngIf="actionLog.length === 0">—</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ========== MANO DEL JUGADOR (4th grid row — never overlaps) ========== -->
+    <div class="hand-section">
+      <div class="setup-error-row" *ngIf="setupError">
+        <span class="setup-error-text">{{ setupError }}</span>
+      </div>
+
+      <div class="hand-header">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/bicycle.png" alt="Hand" class="pixel-icon-tiny">
+        <span>MANO ({{ player.hand.length }})</span>
+      </div>
+
+      <div
+        class="hand-cards-row"
+        cdkDropList
+        cdkDropListOrientation="horizontal"
+        [cdkDropListData]="player.hand"
+        cdkDropListSortingDisabled
+        id="hand-drop-list"
+        [cdkDropListConnectedTo]="connectedDropIds"
+      >
+          <div
+            class="hand-card-item"
+            [class.initial-draw-animating]="initialDrawAnimating"
+            [class.draw-entering]="drawEnterIndex === i"
+            [style.--card-index]="i"
+            *ngFor="let card of player.hand; let i = index"
+            cdkDrag
+            [cdkDragData]="card"
+            [cdkDragDisabled]="!sandboxMode && !(card.basicPokemon || card.basicEnergy || (isEvolutionCard(card) && canEvolve))"
+            tabindex="0"
+            (click)="onHandCardClick(card)"
+          >
+          <div *cdkDragPlaceholder class="hand-card-drag-placeholder"></div>
+          <div *cdkDragPreview class="hand-card-drag-preview-container">
+            <div class="hand-card-drag-preview">
+              <img [src]="card.image" [alt]="card.name" class="drag-preview-img">
+            </div>
+          </div>
+
+            <div class="tcg-hand-card"
+                 [class.non-pokemon]="!card.basicPokemon && !card.basicEnergy"
+                 [class.benchable]="card.basicPokemon && canBenchInMain"
+                 [class.energy-card]="card.basicEnergy && currentPhase === 'MAIN' && isMyTurn">
+            <div class="tcg-hand-card-header">
+              <span class="tcg-hand-hp" *ngIf="card.hp">{{ card.hp }}<span class="hp-tiny">HP</span></span>
+            </div>
+            <div class="tcg-hand-card-art-area">
+              <img [src]="card.image" [alt]="card.name" class="tcg-hand-art">
+            </div>
+            <div class="tcg-hand-card-footer">
+              <span class="tcg-hand-name">{{ card.name }}</span>
+              <span class="tcg-hand-type" *ngIf="card.basicPokemon">BÁSICO</span>
+              <span class="tcg-hand-type energy-type" *ngIf="card.basicEnergy">ENERGÍA</span>
+              <span class="tcg-hand-type evolution-type" *ngIf="isEvolutionCard(card)">EVOLUCIÓN</span>
+            </div>
+            <div class="evolution-indicator" *ngIf="isEvolutionCard(card) && canEvolve">
+              <span class="evolution-arrow">⬆</span>
+              <span class="evolution-hint" *ngIf="card.evolvesFrom">de {{ card.evolvesFrom }}</span>
+            </div>
+            <div class="drag-indicator" *ngIf="card.basicPokemon">
+              <span class="drag-dots">⠿</span>
+            </div>
+            <div class="drag-indicator energy-drag" *ngIf="card.basicEnergy">
+              <span class="drag-dots">⚡</span>
+            </div>
+            <div class="drag-indicator evolution-drag" *ngIf="isEvolutionCard(card) && canEvolve">
+              <span class="drag-dots">⬆</span>
+            </div>
+            <div class="no-drag-overlay" *ngIf="!sandboxMode && !card.basicPokemon && !card.basicEnergy && !(isEvolutionCard(card) && canEvolve)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Retreat modal -->
+  <div class="retreat-overlay" *ngIf="showRetreatModal">
+    <div class="retreat-modal">
+      <div class="retreat-header">
+        <h2 class="retreat-title">RETIRADA</h2>
+      </div>
+      <div class="retreat-body">
+        <p class="retreat-step-label">1. Seleccioná el Pokémon de la BANCA a promover</p>
+        <div class="retreat-bench-grid">
+          <div class="retreat-bench-card"
+               *ngFor="let poke of player.bench; let i = index"
+               [class.selected]="selectedBenchForRetreat === i"
+               [class.disabled]="!poke"
+               (click)="poke && selectBenchForRetreat(i)">
+            <ng-container *ngIf="poke; else retreatEmptySlot">
+              <img [src]="poke.image" [alt]="poke.name" class="retreat-bench-img">
+              <span class="retreat-bench-name">{{ poke.name }}</span>
+            </ng-container>
+            <ng-template #retreatEmptySlot>
+              <span class="retreat-empty-label">VACÍO</span>
+            </ng-template>
+          </div>
+        </div>
+
+        <div class="retreat-energy-section" *ngIf="selectedBenchForRetreat !== null && playerActiveEnergies.length > 0">
+          <p class="retreat-step-label">2. Seleccioná las energías del ACTIVO a descartar</p>
+          <div class="retreat-energy-grid">
+            <label class="retreat-energy-item" *ngFor="let item of retreatEnergySelection; let i = index">
+              <input type="checkbox" [checked]="item.selected" (change)="toggleEnergyForRetreat(i)">
+              <span class="retreat-energy-type">{{ item.energy.energyType }}</span>
+            </label>
+          </div>
+          <p class="retreat-energy-hint" *ngIf="retreatEnergySelection.length === 0">
+            No hay energías adjuntas al Pokémon activo.
+          </p>
+        </div>
+
+        <div class="retreat-energy-section" *ngIf="selectedBenchForRetreat !== null && playerActiveEnergies.length === 0">
+          <p class="retreat-step-label">2. Energías a descartar</p>
+          <p class="retreat-energy-hint">El Pokémon activo no tiene energías adjuntas. No se descartarán energías.</p>
+        </div>
+
+        <div class="retreat-error" *ngIf="retreatError">{{ retreatError }}</div>
+      </div>
+      <div class="retreat-footer">
+        <button class="pixel-btn retreat-cancel-btn" (click)="closeRetreatModal()" [disabled]="retreating">
+          CANCELAR
+        </button>
+        <button class="pixel-btn retreat-confirm-btn"
+                (click)="confirmRetreat()"
+                [disabled]="selectedBenchForRetreat === null || retreating">
+          {{ retreating ? 'RETIRANDO…' : 'CONFIRMAR RETIRADA' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attack target modal -->
+  <div class="trainer-overlay" *ngIf="showAttackTargetModal && pendingTargetAttack">
+    <div class="trainer-modal attack-target-modal">
+      <div class="trainer-header">
+        <h2 class="trainer-title">ACCIONES DEL ATAQUE</h2>
+      </div>
+      <div class="trainer-body">
+        <div class="trainer-card-preview">
+          <span class="trainer-card-name">{{ pendingTargetAttack.name || 'Ataque' }}</span>
+          <span class="trainer-card-subtype" *ngIf="pendingTargetAttack.text">{{ pendingTargetAttack.text }}</span>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="attackEffectPreviews().length > 0">
+          <p class="trainer-step-label">Patrones detectados:</p>
+          <div class="trainer-energy-grid">
+            <span class="trainer-energy-item selected"
+                  *ngFor="let effect of attackEffectPreviews()">
+              <span class="trainer-energy-type">{{ effect }}</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="attackNeedsOwnTargetSection(pendingTargetAttack)">
+          <p class="trainer-step-label">Seleccioná un Pokémon propio:</p>
+          <div class="trainer-target-grid">
+            <div class="trainer-target-option"
+                 *ngIf="attackAllowsOwnActiveTarget(pendingTargetAttack)"
+                 [class.selected]="isSelectedAttackTarget(myPlayerId, 'ACTIVE')"
+                 (click)="player.active && selectAttackTarget(myPlayerId, 'ACTIVE')">
+              <span class="trainer-target-label">ACTIVO</span>
+              <span class="trainer-target-name" *ngIf="player.active">{{ player.active.name }}</span>
+              <span class="trainer-target-empty" *ngIf="!player.active">—</span>
+            </div>
+            <div class="trainer-target-option"
+                 *ngFor="let poke of player.bench; let i = index"
+                 [class.selected]="isSelectedAttackTarget(myPlayerId, slotForBench(i))"
+                 (click)="poke && selectAttackTarget(myPlayerId, slotForBench(i))">
+              <span class="trainer-target-label">BANCA {{ i + 1 }}</span>
+              <span class="trainer-target-name" *ngIf="poke">{{ poke.name }}</span>
+              <span class="trainer-target-empty" *ngIf="!poke">VACÍO</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="attackNeedsOpponentTargetSection(pendingTargetAttack)">
+          <p class="trainer-step-label">Seleccioná un Pokémon rival:</p>
+          <div class="trainer-target-grid">
+            <div class="trainer-target-option"
+                 *ngIf="attackAllowsOpponentActiveTarget(pendingTargetAttack)"
+                 [class.selected]="isSelectedAttackTarget(opponentPlayerId, 'ACTIVE')"
+                 (click)="opponent.active && selectAttackTarget(opponentPlayerId, 'ACTIVE')">
+              <span class="trainer-target-label">ACTIVO</span>
+              <span class="trainer-target-name" *ngIf="opponent.active">{{ opponent.active.name }}</span>
+              <span class="trainer-target-empty" *ngIf="!opponent.active">—</span>
+            </div>
+            <div class="trainer-target-option"
+                 *ngFor="let poke of opponent.bench; let i = index"
+                 [class.selected]="isSelectedAttackTarget(opponentPlayerId, slotForBench(i))"
+                 (click)="poke && selectAttackTarget(opponentPlayerId, slotForBench(i))">
+              <span class="trainer-target-label">BANCA {{ i + 1 }}</span>
+              <span class="trainer-target-name" *ngIf="poke">{{ poke.name }}</span>
+              <span class="trainer-target-empty" *ngIf="!poke">VACÍO</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="trainer-target-section attack-deck-section" *ngIf="attackNeedsDeckSection(pendingTargetAttack)">
+          <p class="trainer-step-label">{{ attackDeckSectionLabel(pendingTargetAttack) }}</p>
+          <p class="trainer-energy-hint" *ngIf="attackDeckLoading">Cargando mazo...</p>
+          <ng-container *ngIf="!attackDeckLoading && attackDeckOptions(pendingTargetAttack) as deckOptions">
+            <div class="attack-deck-grid" *ngIf="deckOptions.length > 0; else noAttackDeckOptions">
+              <div class="attack-deck-card"
+                   *ngFor="let card of deckOptions"
+                   [class.selected]="isAttackDeckCardSelected(card)"
+                   (click)="toggleAttackDeckCard(card)">
+                <img [src]="resolveCardImageFromInfo(card)"
+                     [alt]="card.name"
+                     class="attack-deck-card-img"
+                     (error)="onMulliganImgError($event)">
+                <span class="attack-deck-card-name">{{ card.name }}</span>
+                <span class="attack-deck-card-type">{{ card.supertype }}</span>
+                <span class="attack-deck-order-badge" *ngIf="isAttackTopDeckOrderMode(pendingTargetAttack)">
+                  #{{ attackDeckOrderPosition(card) }}
+                </span>
+                <div class="attack-deck-order-controls" *ngIf="isAttackTopDeckOrderMode(pendingTargetAttack)">
+                  <button type="button"
+                          class="attack-deck-order-btn"
+                          (click)="moveAttackDeckCard(card, -1); $event.stopPropagation()"
+                          [disabled]="attackDeckOrderPosition(card) <= 1">
+                    SUBIR
+                  </button>
+                  <button type="button"
+                          class="attack-deck-order-btn"
+                          (click)="moveAttackDeckCard(card, 1); $event.stopPropagation()"
+                          [disabled]="attackDeckOrderPosition(card) >= deckOptions.length">
+                    BAJAR
+                  </button>
+                </div>
+              </div>
+            </div>
+            <ng-template #noAttackDeckOptions>
+              <p class="trainer-energy-hint">{{ attackDeckEmptyLabel(pendingTargetAttack) }}</p>
+            </ng-template>
+          </ng-container>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="attackNeedsEnergySection()">
+          <p class="trainer-step-label">{{ attackEnergySectionLabel() }}</p>
+          <div class="trainer-energy-grid" *ngIf="attackAttachedEnergyOptions().length > 0; else noAttackAttachedEnergy">
+            <label class="trainer-energy-item"
+                   *ngFor="let energy of attackAttachedEnergyOptions(); trackBy: trackByEnergyCard"
+                   [class.selected]="isAttackEnergySelected(energy.cardId)">
+              <input type="checkbox"
+                     [checked]="isAttackEnergySelected(energy.cardId)"
+                     (change)="toggleAttackAttachedEnergy(energy.cardId)">
+              <span class="trainer-energy-type">{{ energy.energyType }}</span>
+            </label>
+          </div>
+          <ng-template #noAttackAttachedEnergy>
+            <p class="trainer-energy-hint">No hay energías adjuntas disponibles. El backend resolverá el efecto automáticamente.</p>
+          </ng-template>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="attackNeedsConditionSection()">
+          <p class="trainer-step-label">Seleccioná condición especial:</p>
+          <div class="trainer-energy-grid">
+            <button type="button"
+                    class="trainer-energy-item"
+                    *ngFor="let condition of attackConditionOptions()"
+                    [class.selected]="selectedAttackCondition === condition"
+                    (click)="selectAttackCondition(condition)">
+              <span class="trainer-energy-type">{{ condition }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="trainer-target-section attack-deck-section" *ngIf="attackNeedsHandSection()">
+          <p class="trainer-step-label">{{ attackHandSectionLabel() }}</p>
+          <ng-container *ngIf="attackHandOptions() as handOptions">
+            <div class="attack-deck-grid" *ngIf="handOptions.length > 0; else noAttackHandOptions">
+              <div class="attack-deck-card"
+                   *ngFor="let card of handOptions"
+                   [class.selected]="isAttackHandCardSelected(card)"
+                   (click)="toggleAttackHandCard(card)">
+                <img [src]="resolveCardImageFromInfo(card)"
+                     [alt]="card.name"
+                     class="attack-deck-card-img"
+                     (error)="onMulliganImgError($event)">
+                <span class="attack-deck-card-name">{{ card.name }}</span>
+                <span class="attack-deck-card-type">{{ card.supertype }}</span>
+              </div>
+            </div>
+            <ng-template #noAttackHandOptions>
+              <p class="trainer-energy-hint">{{ attackHandEmptyLabel() }}</p>
+            </ng-template>
+          </ng-container>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="attackNeedsOpponentAttackSection()">
+          <p class="trainer-step-label">Seleccioná un ataque del Pokémon rival:</p>
+          <div class="trainer-energy-grid" *ngIf="attackOpponentAttackOptions() as attackOptions">
+            <button type="button"
+                    class="trainer-energy-item"
+                    *ngFor="let attack of attackOptions; let i = index"
+                    [class.selected]="isAttackOpponentAttackSelected(i)"
+                    (click)="selectAttackOpponentAttack(i)">
+              <span class="trainer-energy-type">{{ attack.name }}</span>
+              <span class="trainer-energy-hint" style="font-size:0.7rem;display:block">{{ attack.text?.slice(0, 60) }}{{ (attack.text?.length ?? 0) > 60 ? '...' : '' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="attackNeedsOptionalEffectSection()">
+          <p class="trainer-step-label">Efecto opcional:</p>
+          <div class="trainer-energy-grid">
+            <button type="button"
+                    class="trainer-energy-item"
+                    [class.selected]="selectedAttackAcceptedOptionalEffect === true"
+                    (click)="setAttackOptionalEffect(true)">
+              <span class="trainer-energy-type">Aplicar</span>
+            </button>
+            <button type="button"
+                    class="trainer-energy-item"
+                    [class.selected]="selectedAttackAcceptedOptionalEffect === false"
+                    (click)="setAttackOptionalEffect(false)">
+              <span class="trainer-energy-type">No aplicar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="trainer-error" *ngIf="attackTargetError">{{ attackTargetError }}</div>
+      </div>
+      <div class="trainer-footer">
+        <button class="pixel-btn trainer-cancel-btn" (click)="closeAttackTargetModal()" [disabled]="attacking">
+          CANCELAR
+        </button>
+        <button class="pixel-btn trainer-play-btn"
+                (click)="confirmAttackTarget()"
+                [disabled]="!canConfirmAttackTarget">
+          CONFIRMAR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trainer modal -->
+  <div class="trainer-overlay" *ngIf="showTrainerModal && selectedTrainerCard">
+    <div class="trainer-modal">
+      <div class="trainer-header">
+        <h2 class="trainer-title">JUGAR ENTRENADOR</h2>
+      </div>
+      <div class="trainer-body">
+        <div class="trainer-card-preview" (click)="toggleCardPreview(selectedTrainerCard)">
+          <img [src]="selectedTrainerCard.image" [alt]="selectedTrainerCard.name" class="trainer-card-img">
+          <span class="trainer-card-name">{{ selectedTrainerCard.name }}</span>
+          <span class="trainer-card-subtype" *ngIf="selectedTrainerCard.subtype">{{ selectedTrainerCard.subtype }}</span>
+        </div>
+
+        <div class="trainer-flags" *ngIf="trainerBlockedReason">
+          <span class="trainer-flag-warn">⚠ {{ trainerBlockedReason }}</span>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="needsOwnPokemonTrainerTarget(selectedTrainerCard)">
+          <p class="trainer-step-label">Seleccioná el Pokémon objetivo (propio):</p>
+          <div class="trainer-target-grid">
+            <div class="trainer-target-option"
+                 [class.selected]="trainerTargetSlot === 'ACTIVE'"
+                 [class.disabled]="isToolCard(selectedTrainerCard) && slotHasTool('ACTIVE')"
+                 (click)="(!isToolCard(selectedTrainerCard) || !slotHasTool('ACTIVE')) && selectTrainerSlot('ACTIVE')">
+              <span class="trainer-target-label">ACTIVO</span>
+              <span class="trainer-target-name" *ngIf="player.active">{{ player.active.name }}</span>
+              <span class="trainer-target-empty" *ngIf="!player.active">—</span>
+              <span class="tool-warning" *ngIf="isToolCard(selectedTrainerCard) && slotHasTool('ACTIVE')">YA TIENE HERRAMIENTA</span>
+            </div>
+            <div class="trainer-target-option"
+                 *ngFor="let poke of player.bench; let i = index"
+                 [class.selected]="trainerTargetSlot === slotForBench(i)"
+                 [class.disabled]="isToolCard(selectedTrainerCard) && poke && slotHasTool(slotForBench(i))"
+                 (click)="poke && (!isToolCard(selectedTrainerCard) || !slotHasTool(slotForBench(i))) && selectTrainerSlot(slotForBench(i))">
+              <span class="trainer-target-label">BANCA {{ i + 1 }}</span>
+              <span class="trainer-target-name" *ngIf="poke">{{ poke.name }}</span>
+              <span class="trainer-target-empty" *ngIf="!poke">VACÍO</span>
+              <span class="tool-warning" *ngIf="isToolCard(selectedTrainerCard) && poke && slotHasTool(slotForBench(i))">YA TIENE HERRAMIENTA</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="needsTrainerDiscardSelection(selectedTrainerCard)">
+          <p class="trainer-step-label">Seleccioná un Pokémon del descarte:</p>
+          <div class="trainer-discard-grid" *ngIf="discardPokemonOptions.length > 0; else noDiscardPokemon">
+            <div class="trainer-discard-item"
+                 *ngFor="let poke of discardPokemonOptions; trackBy: trackByInstanceId"
+                 [class.selected]="selectedTrainerCardIds.includes(poke.instanceId)"
+                 (click)="toggleDiscardCardSelection(poke.instanceId)">
+              <img [src]="poke.image" [alt]="poke.name" class="trainer-discard-img">
+              <span class="trainer-discard-name">{{ poke.name }}</span>
+            </div>
+          </div>
+          <ng-template #noDiscardPokemon>
+            <p class="trainer-energy-hint">No hay Pokémon en el descarte.</p>
+          </ng-template>
+        </div>
+
+        <!-- Deck-search for cards that 'search your deck' (e.g., Evosoda) -->
+        <div class="trainer-target-section" *ngIf="needsDeckSearch(selectedTrainerCard)">
+          <p class="trainer-step-label">Buscar en tu mazo:</p>
+
+          <p *ngIf="needsOwnPokemonTrainerTarget(selectedTrainerCard) && !trainerTargetSlot" class="trainer-energy-hint">Seleccioná primero el Pokémon objetivo (activo o banca).</p>
+
+          <div *ngIf="trainerTargetSlot">
+            <p class="trainer-step-label">Cartas de evolución que coinciden con {{ getSelectedTargetName() }}:</p>
+
+            <div class="trainer-deck-strip" *ngIf="deck && deck.cards && deckSearchCandidates().length > 0">
+              <div class="trainer-deck-item"
+                   *ngFor="let c of deckSearchCandidates(); trackBy: trackByCardId"
+                   (click)="selectDeckSearchCard(c.cardId)"
+                   [class.selected]="selectedTrainerCardIds.includes(c.cardId)">
+                <div class="trainer-deck-card">
+                  <img [src]="imageUrlForDeckCard(c)" [alt]="c.name" class="trainer-deck-img">
+                  <span class="trainer-deck-name">{{ c.name }}</span>
+                </div>
+              </div>
+            </div>
+
+            <p *ngIf="!(deckSearchCandidates().length > 0)" class="trainer-energy-hint">No se encontraron cartas de evolución en el mazo para ese Pokémon.</p>
+          </div>
+        </div>
+
+        <!-- Deck preview for top-of-deck selections (Great Ball, etc.) -->
+        <div class="trainer-target-section" *ngIf="needsDeckPreview(selectedTrainerCard) && (deckPreviewLoading || deckPreview.length > 0)">
+          <p class="trainer-step-label">Top del mazo (seleccioná):</p>
+          <div class="trainer-deck-loading" *ngIf="deckPreviewLoading">Cargando mazo…</div>
+
+          <!-- Horizontal scroll strip: occupies 80% width, allows swipe/scroll left-right -->
+          <div class="trainer-deck-strip" *ngIf="!deckPreviewLoading && deckPreview.length > 0">
+            <div class="trainer-deck-item"
+                 *ngFor="let d of deckPreview; trackBy: trackByInstanceId"
+                 (click)="selectAndPlayDeckPreview(d.instanceId)">
+              <div class="trainer-deck-card">
+                <img [src]="d.image" [alt]="d.name" class="trainer-deck-img">
+                <span class="trainer-deck-name">{{ d.name }}</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="trainer-deck-hint">Desliza para ver las cartas. Tocá una para seleccionarla; o elegí "MEZCLAR SIN ELEGIR" para barajar sin tomar ninguna carta.</p>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="needsTrainerEnergySelection(selectedTrainerCard)">          <p class="trainer-step-label">{{ trainerEnergySelectionLabel(selectedTrainerCard) }}</p>
+          <div class="trainer-energy-grid" *ngIf="trainerEnergyOptions(selectedTrainerCard).length > 0; else noTrainerEnergies">
+            <label class="trainer-energy-item"
+                   *ngFor="let energy of trainerEnergyOptions(selectedTrainerCard); trackBy: trackByEnergyCard"
+                   [class.selected]="isTrainerEnergySelected(energy.cardId)">
+              <input type="checkbox"
+                     [checked]="isTrainerEnergySelected(energy.cardId)"
+                     (change)="toggleTrainerEnergy(energy.cardId)">
+              <span class="trainer-energy-type">{{ energy.energyType }}</span>
+            </label>
+          </div>
+          <ng-template #noTrainerEnergies>
+            <p class="trainer-energy-hint">No hay energías adjuntas en ese objetivo. Si jugás la carta, se usará el comportamiento automático del backend.</p>
+          </ng-template>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="needsDeckEnergySelection(selectedTrainerCard)">
+          <p class="trainer-step-label">Seleccioná hasta {{ selectableDeckEnergyCount(selectedTrainerCard) }} energía(s) básica(s) del mazo:</p>
+          <div class="trainer-energy-grid" *ngIf="trainerDeckEnergyOptions.length > 0; else noDeckEnergy">
+            <label class="trainer-energy-item"
+                   *ngFor="let opt of trainerDeckEnergyOptions; trackBy: trackByCardId"
+                   [class.selected]="selectedTrainerCardIds.includes(opt.cardId)"
+                   [class.disabled]="!selectedTrainerCardIds.includes(opt.cardId) && selectedTrainerCardIds.length >= selectableDeckEnergyCount(selectedTrainerCard)">
+              <input type="checkbox"
+                     [checked]="selectedTrainerCardIds.includes(opt.cardId)"
+                     (change)="toggleDeckEnergySelection(opt.cardId)">
+              <span class="trainer-energy-type">{{ opt.energyType }}</span>
+              <span class="energy-count-badge">x{{ opt.count }}</span>
+            </label>
+          </div>
+          <ng-template #noDeckEnergy>
+            <p class="trainer-energy-hint">No hay energías básicas en el mazo.</p>
+          </ng-template>
+        </div>
+
+        <div class="trainer-target-section" *ngIf="needsOpponentPokemonTarget(selectedTrainerCard)">
+          <p class="trainer-step-label">Seleccioná un Pokémon rival (opcional):</p>
+          <div class="trainer-target-grid">
+            <div class="trainer-target-option"
+                 [class.selected]="trainerTargetId === 'ACTIVE:' + (opponentPlayerId ?? '')"
+                 (click)="selectTrainerTarget('ACTIVE:' + (opponentPlayerId ?? ''))">
+              <span class="trainer-target-label">ACTIVO</span>
+              <span class="trainer-target-name" *ngIf="opponent.active">{{ opponent.active.name }}</span>
+              <span class="trainer-target-empty" *ngIf="!opponent.active">—</span>
+            </div>
+            <div class="trainer-target-option"
+                 *ngFor="let poke of opponent.bench; let i = index"
+                 [class.selected]="trainerTargetId === 'BENCH_' + i + ':' + (opponentPlayerId ?? '')"
+                 (click)="poke && selectTrainerTarget('BENCH_' + i + ':' + (opponentPlayerId ?? ''))">
+              <span class="trainer-target-label">BANCA {{ i + 1 }}</span>
+              <span class="trainer-target-name" *ngIf="poke">{{ poke.name }}</span>
+              <span class="trainer-target-empty" *ngIf="!poke">VACÍO</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="trainer-error" *ngIf="trainerError">{{ trainerError }}</div>
+      </div>
+      <div class="trainer-footer">
+        <!-- Cancel button (always available unless in progress) -->
+        <button class="pixel-btn trainer-cancel-btn" (click)="closeTrainerModal()" [disabled]="trainerPlaying">CANCELAR</button>
+
+        <!-- Shuffle-only when applicable -->
+        <button class="pixel-btn trainer-shuffle-btn"
+                *ngIf="needsShuffleOption(selectedTrainerCard)"
+                (click)="shuffleWithoutChoosing()" [disabled]="trainerPlaying">
+          MEZCLAR SIN ELEGIR
+        </button>
+
+        <!-- Play/Confirm button for trainers that need explicit confirmation (tools, discard selections, etc.) -->
+        <button class="pixel-btn trainer-play-btn"
+                *ngIf="shouldShowPlayButton(selectedTrainerCard)"
+                (click)="onPlayButtonClick()"
+                [disabled]="!isPlayButtonEnabled()">
+          JUGAR
+        </button>
+      </div>
+    </div>
+
+    <!-- Reveal overlay: shows selected top-of-deck card being revealed to both players -->
+    <div class="reveal-overlay" *ngIf="revealedDeckSelection && revealPhase !== 'idle'">
+      <div class="reveal-card" [class.revealing]="revealPhase === 'revealing'" [class.done]="revealPhase === 'done'">
+        <img [src]="(deckPreview.find(d => d.instanceId === revealedDeckSelection)?.image) || '/images/cardBack.png'" alt="Revelada" />
+        <div class="reveal-name">{{ deckPreview.find(d => d.instanceId === revealedDeckSelection)?.name }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ability target modal (multi-step abilities) -->
+  <div class="trainer-overlay" *ngIf="showAbilityTargetModal" (click)="closeAbilityTargetModal()">
+    <div class="trainer-modal" (click)="$event.stopPropagation()">
+      <div class="trainer-header">
+        <h2 class="trainer-title">{{ pendingAbilityName || 'USAR HABILIDAD' }}</h2>
+      </div>
+
+      <div class="trainer-body">
+        <!-- Fairy Transfer -->
+        <ng-container *ngIf="abilityModalMode === 'fairy-transfer'">
+          <!-- Step 1: Select source -->
+          <div class="trainer-target-section">
+            <p class="trainer-step-label">1. Seleccioná un Pokémon con energía Fairy</p>
+            <div class="trainer-target-grid">
+              <div *ngFor="let opt of fairyTransferSourceOptions()"
+                   class="trainer-target-option"
+                   [class.selected]="abilitySrcSlot === opt.slot"
+                   (click)="abilitySrcSlot = opt.slot; selectedAbilityEnergyCardId = null; abilityDestSlot = null">
+                <span class="trainer-target-label">{{ opt.label }}</span>
+                <span class="trainer-target-name" *ngIf="opt.name">{{ opt.name }}</span>
+              </div>
+            </div>
+            <div *ngIf="fairyTransferSourceOptions().length === 0" class="trainer-energy-hint">
+              Ninguno de tus Pokémon tiene energía Fairy adjunta.
+            </div>
+          </div>
+
+          <!-- Step 2: Select energy -->
+          <div class="trainer-target-section" *ngIf="abilitySrcSlot">
+            <p class="trainer-step-label">2. Seleccioná la energía Fairy a mover</p>
+            <div class="trainer-energy-grid" *ngIf="getEnergiesForSourceSlot().length > 0; else noAbilityEnergy">
+              <div *ngFor="let energy of getEnergiesForSourceSlot(); trackBy: trackByEnergyCard"
+                   class="trainer-energy-item"
+                   [class.selected]="selectedAbilityEnergyCardId === energy.cardId"
+                   (click)="selectedAbilityEnergyCardId = energy.cardId; abilityDestSlot = null">
+                <span class="trainer-energy-type">{{ energy.energyType }}</span>
+              </div>
+            </div>
+            <ng-template #noAbilityEnergy>
+              <p class="trainer-energy-hint">No hay energías Fairy en el Pokémon seleccionado.</p>
+            </ng-template>
+          </div>
+
+          <!-- Step 3: Select destination -->
+          <div class="trainer-target-section" *ngIf="selectedAbilityEnergyCardId">
+            <p class="trainer-step-label">3. Seleccioná el Pokémon destino</p>
+            <div class="trainer-target-grid">
+              <div *ngFor="let opt of fairyTransferDestOptions()"
+                   class="trainer-target-option"
+                   [class.selected]="abilityDestSlot === opt.slot"
+                   (click)="abilityDestSlot = opt.slot">
+                <span class="trainer-target-label">{{ opt.label }}</span>
+                <span class="trainer-target-name" *ngIf="opt.name">{{ opt.name }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Stance Change -->
+        <ng-container *ngIf="abilityModalMode === 'stance-change'">
+          <div class="trainer-target-section">
+            <p class="trainer-step-label">Seleccioná un Aegislash de tu mano</p>
+            <div class="attack-deck-grid" *ngIf="stanceChangeHandOptions().length > 0; else noStanceChangeHand">
+              <div *ngFor="let card of stanceChangeHandOptions()"
+                   class="attack-deck-card"
+                   [class.selected]="selectedAbilityHandCardId === card.instanceId"
+                   (click)="selectedAbilityHandCardId = card.instanceId">
+                <img [src]="card.image" [alt]="card.name" class="attack-deck-card-img" (error)="onMulliganImgError($event)">
+                <span class="attack-deck-card-name">{{ card.name }}</span>
+              </div>
+            </div>
+            <ng-template #noStanceChangeHand>
+              <p class="trainer-energy-hint">No tenés Aegislash en tu mano.</p>
+            </ng-template>
+          </div>
+        </ng-container>
+
+        <!-- Error message -->
+        <div class="trainer-error" *ngIf="abilityTargetError">{{ abilityTargetError }}</div>
+      </div>
+
+      <div class="trainer-footer">
+        <button class="pixel-btn trainer-cancel-btn" (click)="closeAbilityTargetModal()">CANCELAR</button>
+        <button class="pixel-btn trainer-play-btn" (click)="confirmAbilityTarget()">CONFIRMAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card reveal notification (opponent sees what you searched) -->
+  <div class="card-reveal-overlay" *ngIf="cardRevealNotification" (click)="dismissCardReveal()">
+    <div class="card-reveal-modal" (click)="$event.stopPropagation()">
+      <p class="card-reveal-title">🔍 {{ cardRevealNotification.playerName }} reveló:</p>
+      <div class="card-reveal-grid">
+        <div class="card-reveal-item" *ngFor="let name of cardRevealNotification.cardNames; let i = index">
+          <img [src]="cardRevealNotification.cardImages[i]" [alt]="name" class="card-reveal-img">
+          <span class="card-reveal-name">{{ name }}</span>
+        </div>
+      </div>
+      <button class="pixel-btn card-reveal-accept" (click)="dismissCardReveal()">ACEPTAR</button>
+    </div>
+  </div>
+
+  <app-confirmation-modal></app-confirmation-modal>
+
+  <app-deck-view-overlay
+    *ngIf="showDeckView"
+    [deck]="deck"
+    [error]="deckLoadError"
+    (close)="closeDeckView()"
+  ></app-deck-view-overlay>
+
+  <!-- Card preview overlay -->
+  <app-card-detail-overlay
+    *ngIf="previewedCardSummary"
+    [card]="previewedCardSummary"
+    [attachedEnergies]="previewedCardEnergies"
+    (close)="closeCardPreview()"
+  ></app-card-detail-overlay>
+
+  <!-- Sandbox: selector de cartas -->
+  <div class="sandbox-picker-overlay" *ngIf="showSandboxPicker" (click)="closeSandboxPicker()">
+    <div class="sandbox-picker-modal" (click)="$event.stopPropagation()">
+      <div class="sandbox-picker-header">
+        <h2>🃏 SACAR CARTA</h2>
+        <button class="sandbox-picker-close" (click)="closeSandboxPicker()">✕</button>
+      </div>
+
+      <!-- Origen: mi mazo o todas las cartas (sin mazo) -->
+      <div class="sandbox-picker-tabs">
+        <span class="sandbox-picker-tablabel">Origen:</span>
+        <button class="sandbox-tab" [class.active]="sandboxPickSource === 'deck'" (click)="setSandboxPickSource('deck')">Mi mazo</button>
+        <button class="sandbox-tab" [class.active]="sandboxPickSource === 'catalog'" (click)="setSandboxPickSource('catalog')">Todas las cartas</button>
+      </div>
+
+      <!-- Destino: dónde se coloca la carta seleccionada -->
+      <div class="sandbox-picker-tabs">
+        <span class="sandbox-picker-tablabel">Destino:</span>
+        <button class="sandbox-tab" *ngFor="let t of ['HAND','MY_ACTIVE','MY_BENCH','OPP_ACTIVE','OPP_BENCH']"
+                [class.active]="sandboxPickTarget === t"
+                [class.target-opp]="t === 'OPP_ACTIVE' || t === 'OPP_BENCH'"
+                (click)="setSandboxPickTarget($any(t))">
+          {{ sandboxTargetLabel($any(t)) }}
+        </button>
+      </div>
+
+      <input *ngIf="sandboxPickSource === 'catalog'" class="sandbox-picker-search"
+             type="text" placeholder="Filtrar por nombre..." [(ngModel)]="sandboxCatalogFilter">
+
+      <!-- Filtro: solo cartas con habilidad -->
+      <div class="sandbox-picker-tabs">
+        <span class="sandbox-picker-tablabel">Filtro:</span>
+        <button class="sandbox-tab" [class.active]="sandboxOnlyWithAbility"
+                (click)="sandboxOnlyWithAbility = !sandboxOnlyWithAbility">
+          ⚡ Solo con habilidad
+        </button>
+      </div>
+
+      <p class="sandbox-picker-hint">Tocá una carta para enviarla a <strong>{{ sandboxTargetLabel(sandboxPickTarget) }}</strong>. Una energía sobre un activo/banca se adjunta al Pokémon que esté ahí.</p>
+
+      <div class="sandbox-picker-state" *ngIf="sandboxPickSource === 'catalog' && sandboxCatalogLoading">Cargando catálogo…</div>
+      <div class="sandbox-picker-state error" *ngIf="sandboxPickSource === 'catalog' && sandboxCatalogError">{{ sandboxCatalogError }}</div>
+
+      <div class="sandbox-picker-grid" *ngIf="!(sandboxPickSource === 'catalog' && (sandboxCatalogLoading || sandboxCatalogError))">
+        <div class="sandbox-picker-card" *ngFor="let card of sandboxPickerCards" (click)="pickSandboxCard(card)">
+          <img [src]="card.image" [alt]="card.name" class="sandbox-picker-img">
+          <span class="sandbox-picker-name">{{ card.name }}</span>
+          <span class="sandbox-picker-kind">{{ sandboxCardKind(card) }}</span>
+        </div>
+        <div class="sandbox-picker-state" *ngIf="sandboxPickerCards.length === 0">Sin cartas.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Draw animation: flying card from deck to hand -->
+  <div class="draw-flying-card" *ngIf="drawAnimating && drawnCardPreview"
+       [class.show-back]="drawCardBackOnly"
+       [class.sliding-to-hand]="slidingToHand">
+    <div class="flying-card-inner">
+      <div class="flying-card-back"></div>
+      <div class="flying-card-face">
+        <img [src]="drawnCardPreview.image" [alt]="drawnCardPreview.name">
+      </div>
+    </div>
+  </div>
+
+  <!-- Ability hand-discard animation: card flies from hand to discard pile -->
+  <div class="hand-discard-overlay" *ngIf="handDiscardAnimating && handDiscardCard">
+    <div class="discarding-card">
+      <img [src]="handDiscardCard.image" [alt]="handDiscardCard.name">
+    </div>
+  </div>
+
+  <!-- Prize animation: card-backs flying from prize pile to hand -->
+  <ng-container *ngIf="prizeAnimating">
+    <div class="prize-flying-card"
+         *ngFor="let c of [].constructor(prizeAnimatingCount); let pi = index"
+         [style.animation-delay]="(pi * 0.15) + 's'"
+         [class.sliding-to-hand]="prizeSliding">
+      <div class="flying-card-back"></div>
+    </div>
+  </ng-container>
+
+  <!-- KO discard animation: Pokemon + energies fly to discard pile -->
+  <div class="ko-discard-container" *ngIf="koDiscardAnimating"
+       [class.ko-discard-opp]="koDiscardSide === 'opp'">
+    <div class="ko-discard-pokemon">
+      <img [src]="koDiscardImage" [alt]="koDiscardName" class="ko-discard-img">
+    </div>
+    <div class="ko-discard-energy" *ngFor="let e of koDiscardEnergies; let i = index"
+         [style.animation-delay]="(i * 0.1) + 's'">
+      <img [src]="energyImage(e.energyType)" [alt]="e.energyType">
+    </div>
+  </div>
+
+
+  <!-- Attack action effects: visual feedback for special attack actions -->
+  <div class="attack-action-effects" *ngIf="attackActionAnimations.length > 0">
+    <div class="attack-action-effect"
+         *ngFor="let effect of attackActionAnimations; let effectIndex = index"
+         [ngClass]="'attack-action-' + effect.type"
+         [style.animation-delay]="(effectIndex * 0.12) + 's'">
+      <div class="action-effect-track">
+        <ng-container *ngIf="effect.type === 'draw' || effect.type === 'search' || effect.type === 'discard'">
+          <div class="action-card-sprite"
+               *ngFor="let _ of effect.copies; let i = index"
+               [style.--action-copy]="i">
+            <div class="action-card-back"></div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="effect.type === 'energy-discard' || effect.type === 'energy-attach' || effect.type === 'energy-move'">
+          <div class="action-energy-sprite"
+               *ngFor="let _ of effect.copies; let i = index"
+               [style.--action-copy]="i">
+            <img [src]="energyImage('Colorless')" alt="Energía">
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="effect.type === 'switch'">
+          <div class="action-switch-card action-switch-active"></div>
+          <div class="action-switch-arrow">↕</div>
+          <div class="action-switch-card action-switch-bench"></div>
+        </ng-container>
+      </div>
+      <div class="action-effect-label">{{ effect.label }}</div>
+    </div>
+  </div>
+
+  <!-- Retreat swap animation: active slides down, bench slides up -->
+  <div class="retreat-overlay-card retreat-active-out"
+       *ngIf="retreatSwapAnimating && retreatActiveOut"
+       [style.--retreat-slot]="retreatBenchSlot">
+    <img [src]="retreatActiveOut.image" [alt]="retreatActiveOut.name">
+  </div>
+  <div class="retreat-overlay-card retreat-bench-in"
+       *ngIf="retreatSwapAnimating && retreatBenchIn"
+       [style.--retreat-slot]="retreatBenchSlot">
+    <img [src]="retreatBenchIn.image" [alt]="retreatBenchIn.name">
+  </div>
+
+  <!-- Retreat energy discard animation: energies fly from active to discard -->
+  <div class="flying-energy" *ngFor="let e of retreatDiscardedEnergies; let i = index"
+       [style.--energy-idx]="i"
+       [style.animation-delay]="(i * 0.08) + 's'">
+    <img [src]="energyImage(e.energyType)" [alt]="e.energyType">
+  </div>
+
+  <!-- Toast de acción bloqueada -->
+  <div class="action-toast" *ngIf="toastMessage" (click)="toastMessage = null">
+    <span class="action-toast-icon">⚠</span>
+    <span class="action-toast-text">{{ toastMessage }}</span>
+  </div>
+</div>

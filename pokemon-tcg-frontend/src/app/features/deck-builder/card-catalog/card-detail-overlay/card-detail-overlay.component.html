@@ -1,0 +1,172 @@
+<ng-container *ngIf="rect; else fullscreenMode">
+  <div class="overlay-side" [ngStyle]="overlayStyle()" role="dialog" aria-label="Card detail" (click)="close.emit()">
+    <div class="overlay-inner">
+      <div class="overlay-image">
+        <img [src]="imageUrl(card)" [alt]="card?.name" />
+      </div>
+
+      <div class="overlay-body">
+        <div class="title-row">
+          <h3 class="name">{{ card?.name }}</h3>
+          <span class="badge">{{ card?.supertype }}</span>
+        </div>
+        <div class="meta">{{ card?.subtypes?.join(', ') || '—' }}</div>
+
+        <div class="stats" *ngIf="card?.supertype === 'Pokémon'">
+          <div class="stat">
+            <span class="label">HP</span>
+            <span class="value">{{ card?.hp ?? '—' }}</span>
+          </div>
+          <div class="stat" *ngIf="card?.evolvesFrom">
+            <span class="label">Evoluciona de</span>
+            <span class="value">{{ card?.evolvesFrom }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">Tipo</span>
+            <span class="value">{{ card?.types?.join(', ') || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="rules-section" *ngIf="card?.rules?.length">
+          <h4>Efecto</h4>
+          <div class="rule-text" *ngFor="let rule of card?.rules">{{ rule }}</div>
+        </div>
+
+        <div class="status-panel" *ngIf="statusCondition() as status" [ngClass]="'status-' + status.toLowerCase()">
+          <span class="status-label">Estado</span>
+          <span class="status-value">{{ statusLabel(status) }}</span>
+        </div>
+
+        <div class="attached-energies-panel" *ngIf="groupedEnergies().length > 0">
+          <h4 class="energies-title">Energía Adjuntada</h4>
+          <div class="energies-list">
+            <app-energy-type-icon
+              *ngFor="let ge of groupedEnergies()"
+              [energyType]="asEnergyType(ge.energyType)"
+              [count]="ge.count"
+            ></app-energy-type-icon>
+          </div>
+        </div>
+
+        <div class="abilities-section" *ngIf="card?.abilities?.length">
+          <h4>Habilidades</h4>
+          <div class="ability" *ngFor="let ab of card?.abilities">
+            <div class="ability-name">{{ ab.name }}</div>
+            <div class="ability-text" *ngIf="ab.text">{{ ab.text }}</div>
+          </div>
+        </div>
+
+        <div class="attacks" *ngIf="card?.attacks?.length">
+          <h4>Ataques</h4>
+          <div class="attack" *ngFor="let a of card?.attacks">
+            <div class="attack-header">
+              <div class="attack-name">{{ a.name }}</div>
+              <div class="damage">{{ a.damage || '—' }}</div>
+            </div>
+            <div class="cost-row">
+              <span *ngFor="let c of costDots(a)" class="cost-dot" [class]="c.toLowerCase()"></span>
+              <span class="cost-count" *ngIf="a.convertedEnergyCost"> {{ a.convertedEnergyCost }}</span>
+            </div>
+            <div class="attack-text" *ngIf="a.text">{{ a.text }}</div>
+          </div>
+        </div>
+
+        <div class="wr-rr">
+          <div *ngIf="card?.weaknesses?.length" class="weaknesses">Debilidad: {{ weaknessesText() }}</div>
+          <div *ngIf="card?.resistances?.length" class="resistances">Resistencia: {{ resistancesText() }}</div>
+          <div *ngIf="card?.retreatCost != null && card?.supertype === 'Pokémon'" class="retreat-info">
+            Costo de Retirada: {{ card?.retreatCost }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #fullscreenMode>
+  <div class="overlay-backdrop" (click)="close.emit()">
+    <div class="overlay-card" (click)="$event.stopPropagation()" role="dialog" aria-label="Card detail">
+      <button class="close-btn" (click)="close.emit()">✕</button>
+      <div class="overlay-inner">
+        <div class="overlay-image">
+          <img [src]="imageUrl(card)" [alt]="card?.name" />
+        </div>
+
+        <div class="overlay-body">
+          <div class="title-row">
+            <h3 class="name">{{ card?.name }}</h3>
+            <span class="badge">{{ card?.supertype }}</span>
+          </div>
+          <div class="meta">{{ card?.subtypes?.join(', ') || '—' }}</div>
+
+          <div class="stats" *ngIf="card?.supertype === 'Pokémon'">
+            <div class="stat">
+              <span class="label">HP</span>
+              <span class="value">{{ card?.hp ?? '—' }}</span>
+            </div>
+            <div class="stat" *ngIf="card?.evolvesFrom">
+              <span class="label">Evoluciona de</span>
+              <span class="value">{{ card?.evolvesFrom }}</span>
+            </div>
+            <div class="stat">
+              <span class="label">Tipo</span>
+              <span class="value">{{ card?.types?.join(', ') || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="rules-section" *ngIf="card?.rules?.length">
+            <h4>Efecto</h4>
+            <div class="rule-text" *ngFor="let rule of card?.rules">{{ rule }}</div>
+          </div>
+
+          <div class="status-panel" *ngIf="statusCondition() as status" [ngClass]="'status-' + status.toLowerCase()">
+            <span class="status-label">Estado</span>
+            <span class="status-value">{{ statusLabel(status) }}</span>
+          </div>
+
+          <div class="attached-energies-panel" *ngIf="groupedEnergies().length > 0">
+            <h4 class="energies-title">Energía Adjuntada</h4>
+            <div class="energies-list">
+              <app-energy-type-icon
+                *ngFor="let ge of groupedEnergies()"
+                [energyType]="asEnergyType(ge.energyType)"
+                [count]="ge.count"
+              ></app-energy-type-icon>
+            </div>
+          </div>
+
+          <div class="abilities-section" *ngIf="card?.abilities?.length">
+            <h4>Habilidades</h4>
+            <div class="ability" *ngFor="let ab of card?.abilities">
+              <div class="ability-name">{{ ab.name }}</div>
+              <div class="ability-text" *ngIf="ab.text">{{ ab.text }}</div>
+            </div>
+          </div>
+
+          <div class="attacks" *ngIf="card?.attacks?.length">
+            <h4>Ataques</h4>
+            <div class="attack" *ngFor="let a of card?.attacks">
+              <div class="attack-header">
+                <div class="attack-name">{{ a.name }}</div>
+                <div class="damage">{{ a.damage || '—' }}</div>
+              </div>
+              <div class="cost-row">
+                <span *ngFor="let c of costDots(a)" class="cost-dot" [class]="c.toLowerCase()"></span>
+                <span class="cost-count" *ngIf="a.convertedEnergyCost"> {{ a.convertedEnergyCost }}</span>
+              </div>
+              <div class="attack-text" *ngIf="a.text">{{ a.text }}</div>
+            </div>
+          </div>
+
+          <div class="wr-rr">
+            <div *ngIf="card?.weaknesses?.length" class="weaknesses">Debilidad: {{ weaknessesText() }}</div>
+            <div *ngIf="card?.resistances?.length" class="resistances">Resistencia: {{ resistancesText() }}</div>
+            <div *ngIf="card?.retreatCost != null && card?.supertype === 'Pokémon'" class="retreat-info">
+              Costo de Retirada: {{ card?.retreatCost }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

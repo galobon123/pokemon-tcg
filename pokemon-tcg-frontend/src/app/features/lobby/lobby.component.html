@@ -1,0 +1,379 @@
+<div class="retro-lobby" [class.dark-mode]="darkMode">
+  <!-- MODAL DE CONFIRMACIÓN -->
+  <app-confirmation-modal></app-confirmation-modal>
+  <!-- 1. HEADER SUPERIOR -->
+  <header class="pixel-header">
+    <div class="logo">
+      <div class="pokemon-text">POK<span class="accent-e">E</span>MON</div>
+      <div class="tcg-text">TCG ARENA</div>
+    </div>
+    <div class="user-card" (click)="toggleUserDashboard()">
+      <button class="dark-mode-toggle" (click)="toggleDarkMode(); $event.stopPropagation()" [title]="darkMode ? 'Modo claro' : 'Modo oscuro'">
+        <span class="toggle-icon">{{ darkMode ? '☀️' : '🌙' }}</span>
+      </button>
+      <div class="user-info">
+        <span class="user-name">{{ currentUser.name }}</span>
+        <span class="user-level">LVL {{ currentUser.level }}</span>
+      </div>
+      <img [src]="currentUser.avatar" alt="Avatar" class="pixel-avatar">
+    </div>
+
+    <!-- USER DASHBOARD -->
+    <div class="user-dashboard" *ngIf="showUserDashboard">
+      <div class="dashboard-content">
+        <div class="dashboard-header">
+          <div class="user-info-expanded" (click)="openAvatarSelection()">
+            <div class="avatar-edit-wrapper">
+              <img [src]="currentUser.avatar" alt="Avatar" class="pixel-avatar-large">
+              <div class="avatar-edit-hint">CAMBIAR</div>
+            </div>
+            <div class="user-text-expanded">
+              <span class="user-name">{{ currentUser.name }}</span>
+              <span class="user-level">LVL {{ currentUser.level }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-options">
+
+          <button class="dashboard-btn settings-btn" (click)="openSettings()">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="Settings" class="btn-icon-sprite">
+            <span class="btn-label">OTROS</span>
+          </button>
+          <button class="dashboard-btn logout-btn" (click)="logout()">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/escape-rope.png" alt="Logout" class="btn-icon-sprite">
+            <span class="btn-label">CERRAR SESIÓN</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- AVATAR SELECTION OVERLAY -->
+  <div class="deck-selection-overlay" *ngIf="showAvatarSelection" (click)="closeAvatarSelection()">
+    <div class="deck-selection-panel avatar-panel" (click)="$event.stopPropagation()">
+      <div class="panel-header">
+        <h3>ELEGIR AVATAR</h3>
+      </div>
+      <div class="panel-body avatar-grid-body">
+        <div class="avatar-grid">
+          <div
+            *ngFor="let avatar of availableAvatars"
+            class="avatar-option"
+            [class.selected]="currentUser.avatar === avatar"
+            (click)="changeAvatar(avatar)"
+          >
+            <img [src]="avatar" alt="Pokemon" class="avatar-option-img">
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button class="pixel-btn cancel-btn" (click)="closeAvatarSelection()">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY BACKDROP -->
+  <div class="dashboard-overlay" *ngIf="showUserDashboard" (click)="closeUserDashboard()"></div>
+
+  <main class="lobby-content">
+    <!-- 2. CARDS PRINCIPALES -->
+    <section class="top-cards-grid">
+      <!-- a) Crear Nueva Sala (offline mock) -->
+      <div class="pixel-card create-room" (click)="createRoom()">
+        <div class="card-content">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" alt="Create" class="pixel-icon">
+          <div class="text-group">
+            <h3>Sala de Práctica</h3>
+            <p>Offline - Mazo pre-seleccionado</p>
+          </div>
+        </div>
+        <div class="card-border-bottom border-red"></div>
+      </div>
+
+      <!-- b) Crear Partida Online -->
+      <div class="pixel-card create-room" (click)="openCreateGame()">
+        <div class="card-content">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png" alt="Online" class="pixel-icon">
+          <div class="text-group">
+            <h3>Crear Partida</h3>
+            <p>Online - Invitá a un amigo</p>
+          </div>
+        </div>
+        <div class="card-border-bottom border-gold"></div>
+      </div>
+
+      <!-- b) Gestor de Mazos -->
+      <div class="pixel-card deck-manager" [routerLink]="['/deck-manager']" (click)="openDecks()">
+        <div class="card-content">
+          <img src="https://cdna.artstation.com/p/assets/images/images/042/745/536/large/pablo-valero-cartanormal-720x720.jpg?1635334689" alt="Decks" class="pixel-icon" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/pokedex.png'">
+          <div class="text-group">
+            <h3>Gestor de Mazos</h3>
+            <p>Edita tu colección XY1</p>
+          </div>
+        </div>
+        <div class="card-border-bottom border-blue"></div>
+      </div>
+    </section>
+
+    <!-- Volver a la partida online activa (barra delgada, centrada) -->
+    <div class="return-to-game-bar" *ngIf="activeGameId">
+      <button class="return-to-game-btn" (click)="goToActiveGame()">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/vs-seeker.png" alt="Return" class="return-icon">
+        <span class="return-text">Volver a la Partida</span>
+        <span class="return-sub">· Batalla en desarrollo</span>
+      </button>
+    </div>
+
+    <!-- 3. SECCIÓN "UNIRSE A PARTIDA" -->
+    <section class="join-game-section">
+      <div class="section-title">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/vs-seeker.png" alt="VS" class="pixel-icon-small">
+        <h2>UNIRSE A PARTIDA</h2>
+      </div>
+
+      <div class="join-game-card">
+        <div class="join-game-form">
+          <label class="join-label">CÓDIGO DE PARTIDA</label>
+          <input
+            type="text"
+            class="join-input"
+            placeholder="Ingresá el código..."
+            [(ngModel)]="joinGameId"
+            (keydown.enter)="openJoinGame()"
+          />
+          <button
+            class="pixel-btn join-btn"
+            [disabled]="!joinGameId.trim() || isJoiningGame"
+            (click)="openJoinGame()"
+          >
+            {{ isJoiningGame ? 'UNIÉNDOSE...' : 'UNIRSE' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. SECCIÓN "HISTORIAL DE PARTIDAS" -->
+    <section class="history-section">
+      <div class="section-title">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/old-rod.png" alt="History" class="pixel-icon-small">
+        <h2>HISTORIAL</h2>
+      </div>
+
+      <div class="history-card">
+        <div *ngIf="isHistoryLoading" class="history-loading">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-share.png" alt="Loading" class="pixel-icon-small">
+          <p>Cargando historial...</p>
+        </div>
+
+        <div *ngIf="historyLoadError" class="history-empty">
+          <p>{{ historyLoadError }}</p>
+        </div>
+
+        <div *ngIf="!isHistoryLoading && !historyLoadError && matchHistory.length === 0" class="history-empty">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/town-map.png" alt="No history" class="pixel-icon-small">
+          <p>Aún no jugaste ninguna partida</p>
+          <p class="sub">Creá o unite a una partida para empezar</p>
+        </div>
+
+        <div *ngIf="!isHistoryLoading && matchHistory.length > 0" class="history-list">
+          <div
+            *ngFor="let match of matchHistory"
+            class="history-item"
+            [class.won]="match.won"
+            [class.lost]="!match.won"
+          >
+            <div class="match-result-badge">
+              <span *ngIf="match.won" class="result-text victory">VICTORIA</span>
+              <span *ngIf="!match.won" class="result-text defeat">DERROTA</span>
+            </div>
+            <div class="match-opponent">
+              <img [src]="match.opponentAvatar" alt="Opponent" class="opponent-avatar" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png'">
+              <span class="opponent-name">{{ match.opponentName }}</span>
+            </div>
+            <div class="match-details">
+              <span class="match-reason">{{ reasonLabel(match.reason) }}</span>
+              <span class="match-date">{{ formatDate(match.finishedAt) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          class="pixel-btn clear-history-btn"
+          *ngIf="!isHistoryLoading && matchHistory.length > 0"
+          [disabled]="isClearingHistory"
+          (click)="clearHistory()"
+        >
+          {{ isClearingHistory ? 'BORRANDO...' : 'BORRAR HISTORIAL' }}
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 4. DECK SELECTION OVERLAY -->
+  <div class="deck-selection-overlay" *ngIf="showDeckSelection" (click)="closeDeckSelection()">
+    <div class="deck-selection-panel" (click)="$event.stopPropagation()">
+      <div class="panel-header">
+        <h3>{{ deckSelectionMode === 'online' ? 'CREAR PARTIDA ONLINE' : 'SALA DE PRÁCTICA' }}</h3>
+      </div>
+
+      <div class="panel-body">
+        <div *ngIf="isDeckLoading" class="no-decks-message">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-share.png" alt="Loading" class="pixel-icon-small">
+          <p>Cargando mazos...</p>
+          <p class="sub">Buscando tu colección en el servidor</p>
+        </div>
+
+        <div *ngIf="deckLoadError" class="no-decks-message">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="Error" class="pixel-icon-small">
+          <p>{{ deckLoadError }}</p>
+          <p class="sub">Revisa el backend y volvé a intentar</p>
+        </div>
+
+        <div *ngIf="!isDeckLoading && !deckLoadError && availableDecks.length === 0" class="no-decks-message">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/old-rod.png" alt="No decks" class="pixel-icon-small">
+          <p>No tenés mazos guardados</p>
+          <p class="sub">Creá uno desde el Gestor de Mazos</p>
+        </div>
+
+        <div *ngIf="!isDeckLoading && !deckLoadError && availableDecks.length > 0" class="decks-list">
+          <div
+            *ngFor="let deck of availableDecks"
+            class="deck-item"
+            [class.selected]="selectedDeckId === deck.id"
+            (click)="selectDeck(deck.id)"
+          >
+            <div class="deck-info">
+              <span class="deck-name">{{ deck.name }}</span>
+              <span class="deck-cards">{{ deckCardCount(deck) }} cartas</span>
+            </div>
+            <div class="deck-actions">
+              <button
+                type="button"
+                class="deck-preview-btn"
+                (click)="openDeckPreview(deck, $event)"
+              >
+                VER
+              </button>
+              <div class="deck-check" [class.checked]="selectedDeckId === deck.id">
+                <span *ngIf="selectedDeckId === deck.id">▼</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="pixel-btn cancel-btn" (click)="closeDeckSelection()">CANCELAR</button>
+        <button
+          *ngIf="deckSelectionMode === 'local'"
+          class="pixel-btn confirm-btn"
+          [disabled]="!selectedDeckId"
+          (click)="confirmCreateRoom()"
+        >
+          SALA LOCAL
+        </button>
+        <button
+          *ngIf="deckSelectionMode === 'online'"
+          class="pixel-btn online-btn"
+          [disabled]="!selectedDeckId || isCreatingGame"
+          (click)="confirmCreateGame()"
+        >
+          {{ isCreatingGame ? 'CREANDO...' : 'PARTIDA ONLINE' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game code overlay -->
+  <div class="join-game-overlay" *ngIf="showGameCode" (click)="closeGameCode()">
+    <div class="join-game-panel" (click)="$event.stopPropagation()">
+      <div class="panel-header">
+        <h3>PARTIDA CREADA</h3>
+      </div>
+      <div class="panel-body game-code-body">
+        <p class="game-code-label">COMPARTÍ ESTE CÓDIGO CON TU OPONENTE</p>
+        <div class="game-code-value" (click)="copyGameCode()" title="Hacé clic para copiar">{{ createdGameId }}</div>
+        <button class="pixel-btn copy-btn" (click)="copyGameCode()">
+          {{ gameCodeCopied ? 'COPIADO ✓' : 'COPIAR CÓDIGO' }}
+        </button>
+        <p *ngIf="gameCreateError" class="game-code-error">{{ gameCreateError }}</p>
+      </div>
+      <div class="panel-footer">
+        <button class="pixel-btn cancel-btn" (click)="closeGameCode()">CERRAR</button>
+        <button class="pixel-btn confirm-btn" (click)="goToCreatedGame()">IR A LA PARTIDA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Join deck selection overlay -->
+  <div class="deck-selection-overlay" *ngIf="showJoinDeckSelection" (click)="closeJoinDeckSelection()">
+    <div class="deck-selection-panel" (click)="$event.stopPropagation()">
+      <div class="panel-header">
+        <h3>SELECCIONAR MAZO PARA UNIRSE</h3>
+      </div>
+
+      <div class="panel-body">
+        <div *ngIf="isDeckLoading" class="no-decks-message">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-share.png" alt="Loading" class="pixel-icon-small">
+          <p>Cargando mazos...</p>
+          <p class="sub">Buscando tu colección en el servidor</p>
+        </div>
+
+        <div *ngIf="joinDeckError" class="no-decks-message">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="Error" class="pixel-icon-small">
+          <p>{{ joinDeckError }}</p>
+          <p class="sub">Revisa el backend y volvé a intentar</p>
+        </div>
+
+        <div *ngIf="!isDeckLoading && !joinDeckError && availableDecks.length === 0" class="no-decks-message">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/old-rod.png" alt="No decks" class="pixel-icon-small">
+          <p>No tenés mazos guardados</p>
+          <p class="sub">Creá uno desde el Gestor de Mazos</p>
+        </div>
+
+        <div *ngIf="!isDeckLoading && !joinDeckError && availableDecks.length > 0" class="decks-list">
+          <div
+            *ngFor="let deck of availableDecks"
+            class="deck-item"
+            [class.selected]="selectedDeckId === deck.id"
+            (click)="selectDeck(deck.id)"
+          >
+            <div class="deck-info">
+              <span class="deck-name">{{ deck.name }}</span>
+              <span class="deck-cards">{{ deckCardCount(deck) }} cartas</span>
+            </div>
+            <div class="deck-actions">
+              <button
+                type="button"
+                class="deck-preview-btn"
+                (click)="openDeckPreview(deck, $event)"
+              >
+                VER
+              </button>
+              <div class="deck-check" [class.checked]="selectedDeckId === deck.id">
+                <span *ngIf="selectedDeckId === deck.id">▼</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="pixel-btn cancel-btn" (click)="closeJoinDeckSelection()">CANCELAR</button>
+        <button
+          class="pixel-btn confirm-btn"
+          [disabled]="!selectedDeckId || isJoiningGame"
+          (click)="confirmJoinGame()"
+        >
+          {{ isJoiningGame ? 'UNIÉNDOSE...' : 'UNIRSE A PARTIDA' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <app-deck-view-overlay
+    *ngIf="showDeckPreview"
+    [deck]="previewDeck"
+    (close)="closeDeckPreview()"
+  ></app-deck-view-overlay>
+</div>

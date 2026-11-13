@@ -1,0 +1,21 @@
+package com.utn.pokemontcg.game.domain.model;
+
+public enum GameActionType {
+    DRAW,
+    SETUP_PLACE_ACTIVE,
+    SETUP_PLACE_BENCH,
+    SETUP_CONFIRM,
+    BENCH_POKEMON,
+    EVOLVE_POKEMON,
+    ATTACH_ENERGY,
+    PLAY_TRAINER,
+    PLAY_SUPPORTER,
+    EQUIP_TOOL,
+    USE_ABILITY,
+    RETREAT,
+    ATTACK,
+    END_TURN,
+    TAKE_PRIZE,
+    APPLY_SPECIAL_CONDITION,
+    RESOLVE_BETWEEN_TURNS
+}

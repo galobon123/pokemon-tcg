@@ -1,0 +1,1380 @@
+// Retro Palette
+$retro-blue: #3949AB;
+$retro-gold: #FFCB05;
+$retro-red: #F44336;
+$retro-bg: #f5f5f5;
+$retro-dark: #222;
+$retro-shadow: rgba(0, 0, 0, 0.3);
+
+// Status Colors
+$status-online: #4CAF50; // Green
+$status-in-game: #2196F3; // Blue
+$status-away: #FFC107; // Yellow
+
+// Mixins for Pixel Art Style
+@mixin pixel-borders($color: $retro-dark) {
+  border: 4px solid $color;
+  // Simulating the "stair" effect of pixel art borders
+  border-image-slice: 2;
+  border-image-width: 2;
+  border-image-outset: 0;
+  border-image-source: url('data:image/svg+xml;utf8,<svg width="4" height="4" viewBox="0 0 4 4" xmlns="http://www.w3.org/2000/svg"><rect width="4" height="4" fill="#{$color}"/><rect x="1" y="1" width="2" height="2" fill="none"/></svg>');
+}
+
+@mixin pixel-shadow {
+  box-shadow: 4px 4px 0px $retro-shadow;
+}
+
+@mixin pixel-hover {
+  transition: transform 0.1s steps(2);
+  &:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px $retro-shadow;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="16" height="16" fill="transparent"/><rect x="0" y="0" width="4" height="4" fill="black"/><rect x="4" y="4" width="4" height="4" fill="black"/><rect x="8" y="8" width="4" height="4" fill="black"/></svg>'), pointer;
+  }
+  &:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px $retro-shadow;
+  }
+}
+
+* {
+  font-family: 'Press Start 2P', cursive;
+  image-rendering: pixelated; // Crucial for pixel art scaling
+}
+
+.retro-lobby {
+  min-height: 100vh;
+  background-color: $retro-bg;
+  background-image: 
+    linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0),
+    linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+  color: $retro-dark;
+  padding-bottom: 2rem;
+}
+
+// 1. HEADER SUPERIOR
+.pixel-header {
+  background-color: $retro-blue;
+  border-bottom: 4px solid $retro-gold;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  @include pixel-shadow;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: visible;
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    align-items: flex-start;
+    z-index: 1;
+    margin-top: -0.8rem;
+
+    .pokemon-text {
+      color: white;
+      font-size: 1.8rem;
+      text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.2em;
+      display: flex;
+      align-items: baseline;
+      margin-bottom: 0.3rem;
+      line-height: 1;
+
+      .accent-e {
+        position: relative;
+        display: inline-block;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: -0.35rem;
+          left: 20%;
+          width: 0.4rem;
+          height: 0.25rem;
+          background: white;
+          box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+          transform: skewX(-20deg);
+        }
+      }
+    }
+    
+    .tcg-text {
+      color: $retro-gold;
+      font-size: 1rem;
+      text-shadow: 2px 2px 0px $retro-dark;
+    }
+  }
+
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.5rem;
+    border: 2px solid $retro-dark;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s ease;
+    height: 70px;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+      
+      .user-name {
+        color: white;
+        font-size: 0.8rem;
+      }
+      
+      .user-level {
+        color: $retro-gold;
+        font-size: 0.6rem;
+      }
+    }
+
+    .pixel-avatar-wrapper {
+      width: 48px;
+      height: 48px;
+      background: white;
+      border: 2px solid $retro-gold;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pixel-avatar {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+      object-fit: contain;
+      transform: scale(1.3);
+    }
+  }
+
+  // USER DASHBOARD
+  .user-dashboard {
+    position: fixed;
+    top: 95px;
+    right: 20px;
+    z-index: 1000;
+
+    .dashboard-content {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 4px solid $retro-dark;
+      box-shadow: 0 8px 0 rgba(0, 0, 0, 0.5), inset 0 -4px 0 rgba(255, 255, 255, 0.1);
+      min-width: 280px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1000;
+
+      .dashboard-header {
+        background: linear-gradient(135deg, $retro-gold 0%, #daa520 100%);
+        padding: 1rem;
+        border-bottom: 3px solid $retro-dark;
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3);
+
+        .user-info-expanded {
+          display: flex;
+          align-items: center;
+          gap: 1.2rem;
+          cursor: pointer;
+          padding: 0.5rem;
+          transition: background 0.2s ease;
+          border: 2px solid transparent;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+
+            .avatar-edit-hint {
+              opacity: 1;
+            }
+          }
+
+          .avatar-edit-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            .pixel-avatar-large {
+              width: 100px;
+              height: 100px;
+              background: white;
+              border: 4px solid $retro-dark;
+              padding: 4px;
+              image-rendering: pixelated;
+              object-fit: contain;
+              @include pixel-shadow;
+            }
+
+            .avatar-edit-hint {
+              position: absolute;
+              bottom: -10px;
+              background: $retro-dark;
+              color: $retro-gold;
+              font-size: 0.4rem;
+              padding: 0.2rem 0.4rem;
+              border: 1px solid $retro-gold;
+              opacity: 0.7;
+              transition: opacity 0.2s ease;
+              white-space: nowrap;
+            }
+          }
+
+          .user-text-expanded {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+
+            .user-name {
+              color: $retro-dark;
+              font-size: 0.8rem;
+              font-weight: bold;
+              text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.3);
+            }
+
+            .user-level {
+              color: $retro-dark;
+              font-size: 0.6rem;
+            }
+
+            .user-id {
+              color: #555;
+              font-size: 0.5rem;
+              font-family: 'Courier New', monospace;
+              letter-spacing: 0.5px;
+              word-break: break-all;
+              margin-top: 0.2rem;
+              border-top: 1px solid rgba(0, 0, 0, 0.2);
+              padding-top: 0.2rem;
+            }
+          }
+        }
+      }
+
+      .dashboard-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0.5rem;
+
+        .dashboard-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          background: linear-gradient(135deg, #2a2a4e 0%, #1f1f3a 100%);
+          border: 3px solid $retro-dark;
+          color: white;
+          padding: 0.75rem 1rem;
+          font-family: 'Press Start 2P', cursive;
+          font-size: 0.5rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          margin-bottom: 0.5rem;
+          box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+          text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7);
+          letter-spacing: 1px;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+            background: linear-gradient(135deg, #3a3a5e 0%, #2f2f4a 100%);
+          }
+
+          &:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+          }
+
+          .btn-icon-sprite {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            min-width: 24px;
+            image-rendering: pixelated;
+          }
+
+          .btn-label {
+            white-space: nowrap;
+          }
+
+          &.inventory-btn {
+            border-color: #4CAF50;
+            color: #4CAF50;
+
+            &:hover {
+              background: linear-gradient(135deg, #2a4a2a 0%, #1f3f1f 100%);
+              box-shadow: 0 6px 0 #4CAF50;
+              text-shadow: 0 0 10px #4CAF50;
+            }
+          }
+
+          &.settings-btn {
+            border-color: #ffb700;
+            color: #ffb700;
+
+            &:hover {
+              background: linear-gradient(135deg, #3a3a3a 0%, #2f2f2f 100%);
+              box-shadow: 0 6px 0 #ffb700;
+              text-shadow: 0 0 10px #ffb700;
+            }
+          }
+
+          &.logout-btn {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+
+            &:hover {
+              background: linear-gradient(135deg, #4a2a2a 0%, #3f1f1f 100%);
+              box-shadow: 0 6px 0 #ff6b6b;
+              text-shadow: 0 0 10px #ff6b6b;
+            }
+          }
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+  }
+
+  // OVERLAY BACKDROP - at header level
+  .dashboard-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    cursor: pointer;
+  }
+}
+
+.lobby-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+// 2. TRES CARDS PRINCIPALES
+.top-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pixel-card {
+  background: white;
+  @include pixel-borders;
+  @include pixel-shadow;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  &.create-room, &.deck-manager {
+    @include pixel-hover;
+
+    .card-content {
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-grow: 1;
+
+      .pixel-icon {
+        width: 48px;
+        height: 48px;
+        object-fit: contain; // Ensures the card icon doesn't distort
+      }
+
+      .text-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+
+        h3 {
+          margin: 0;
+          font-size: 0.9rem;
+          line-height: 1.4;
+        }
+
+        p {
+          margin: 0;
+          font-size: 0.6rem;
+          color: #666;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+
+  &.online-trainers {
+    padding: 1rem;
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px dashed #ccc;
+      padding-bottom: 0.5rem;
+
+      .pixel-icon-small { width: 24px; }
+      h3 { margin: 0; font-size: 0.7rem; }
+    }
+
+    .trainer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+
+      .trainer-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.3rem;
+        border: 2px solid transparent;
+
+        &:hover {
+          background: #eee;
+          border-color: #ccc;
+        }
+
+        .trainer-avatar {
+          width: 32px;
+          height: 32px;
+          border: 2px solid $retro-dark;
+          background: white;
+        }
+
+        .trainer-info {
+          display: flex;
+          flex-direction: column;
+          flex-grow: 1;
+          gap: 0.3rem;
+
+          .trainer-name { font-size: 0.6rem; }
+          .trainer-status { 
+            font-size: 0.5rem; 
+            &[data-status="IN-GAME"] { color: $status-in-game; }
+            &[data-status="ONLINE"] { color: $status-online; }
+            &[data-status="AWAY"] { color: $status-away; }
+          }
+        }
+
+        .status-dot {
+          width: 10px;
+          height: 10px;
+          border: 2px solid $retro-dark;
+          &[data-status="IN-GAME"] { background-color: $status-in-game; }
+          &[data-status="ONLINE"] { background-color: $status-online; }
+          &[data-status="AWAY"] { background-color: $status-away; }
+        }
+      }
+    }
+  }
+
+  .card-border-bottom {
+    height: 8px;
+    width: 100%;
+    &.border-red { background-color: $retro-red; }
+    &.border-blue { background-color: #3F51B5; }
+    &.border-gray { background-color: #9e9e9e; }
+    &.border-gold { background-color: $retro-gold; }
+  }
+}
+
+// Botón "Volver a la Partida": barra delgada y centrada, debajo de las tarjetas
+// principales. Indica una batalla online en curso sin ocupar una tarjeta entera.
+.return-to-game-bar {
+  display: flex;
+  justify-content: center;
+  margin: -1.5rem 0 2.5rem;
+}
+
+.return-to-game-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 1.1rem;
+  background: white;
+  border: 3px solid $retro-red;
+  box-shadow: 3px 3px 0px $retro-shadow;
+  font-family: 'Press Start 2P', cursive;
+  transition: transform 0.1s steps(2);
+  animation: return-to-game-pulse 1.4s steps(2) infinite;
+
+  .return-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  .return-text {
+    font-size: 0.6rem;
+    color: $retro-red;
+    line-height: 1.3;
+  }
+
+  .return-sub {
+    font-size: 0.42rem;
+    color: #999;
+    line-height: 1.3;
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px $retro-shadow;
+    cursor: pointer;
+  }
+
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px $retro-shadow;
+  }
+}
+
+@keyframes return-to-game-pulse {
+  0%, 100% { box-shadow: 3px 3px 0px $retro-shadow; }
+  50%      { box-shadow: 3px 3px 0px rgba(244, 67, 54, 0.6); }
+}
+
+// 3. SECCIÓN "UNIRSE A PARTIDA"
+.join-game-section {
+  margin-bottom: 3rem;
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    .pixel-icon-small { width: 32px; }
+    h2 { margin: 0; font-size: 1.2rem; text-shadow: 2px 2px 0px white; }
+  }
+}
+
+.join-game-card {
+  background: white;
+  @include pixel-borders;
+  @include pixel-shadow;
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+
+  .join-game-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .join-label {
+    font-size: 0.6rem;
+    color: #666;
+  }
+
+  .join-input {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.6rem;
+    padding: 0.75rem 1rem;
+    border: 3px solid $retro-dark;
+    background: #f8f8f8;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: $retro-gold;
+      background: white;
+    }
+
+    &::placeholder {
+      color: #bbb;
+    }
+  }
+
+  .pixel-btn.join-btn {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.6rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    border: 3px solid $retro-dark;
+    background: $retro-blue;
+    color: white;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// 4. HISTORIAL DE PARTIDAS
+.history-section {
+  margin-bottom: 3rem;
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    .pixel-icon-small { width: 32px; }
+    h2 { margin: 0; font-size: 1.2rem; text-shadow: 2px 2px 0px white; }
+  }
+
+  .clear-history-btn {
+    display: block;
+    margin: 1rem auto 0;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.45rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border: 3px solid $retro-dark;
+    background: #c62828;
+    color: white;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.history-card {
+  background: white;
+  @include pixel-borders;
+  @include pixel-shadow;
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+
+  .history-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+
+    .pixel-icon-small { width: 32px; image-rendering: pixelated; }
+    p { margin: 0; font-size: 0.6rem; color: #666; }
+  }
+
+  .history-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+
+    .pixel-icon-small { width: 32px; image-rendering: pixelated; }
+    p { margin: 0; font-size: 0.6rem; color: #666; }
+    .sub { font-size: 0.5rem; color: #999; }
+  }
+
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar { width: 8px; }
+    &::-webkit-scrollbar-track { background: #eee; }
+    &::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      border: 3px solid $retro-dark;
+      background: #f8f8f8;
+      transition: transform 0.1s steps(2);
+
+      &:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0px $retro-shadow;
+      }
+
+      &.won { border-color: #4CAF50; background: #f0faf0; }
+      &.lost { border-color: #F44336; background: #faf0f0; }
+
+      .match-result-badge {
+        flex-shrink: 0;
+
+        .result-text {
+          font-size: 0.5rem;
+          padding: 0.2rem 0.4rem;
+          border: 2px solid $retro-dark;
+
+          &.victory { color: #2e7d32; background: #c8e6c9; border-color: #2e7d32; }
+          &.defeat { color: #c62828; background: #ffcdd2; border-color: #c62828; }
+        }
+      }
+
+      .match-opponent {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-grow: 1;
+
+        .opponent-avatar {
+          width: 32px;
+          height: 32px;
+          image-rendering: pixelated;
+          object-fit: contain;
+          border: 2px solid $retro-dark;
+          background: white;
+        }
+
+        .opponent-name {
+          font-size: 0.65rem;
+        }
+      }
+
+      .match-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.3rem;
+
+        .match-reason {
+          font-size: 0.5rem;
+          color: #888;
+        }
+
+        .match-date {
+          font-size: 0.45rem;
+          color: #aaa;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+}
+
+// Dark mode overrides for history
+.dark-mode {
+  .history-section .section-title h2 {
+    color: white;
+    text-shadow: 2px 2px 0px #0d0d1a;
+  }
+
+  .history-card {
+    background: #1a1a2e;
+    border: 4px solid #222;
+    border-image: none;
+
+    .history-loading p { color: #aaa; }
+
+    .history-empty p { color: #aaa; }
+    .history-empty .sub { color: #666; }
+
+    .history-list {
+      &::-webkit-scrollbar-track { background: #222; }
+      &::-webkit-scrollbar-thumb { background: #444; }
+
+      .history-item {
+        background: #0d0d1a;
+        border-color: #333;
+        color: #e0e0e0;
+
+        &.won { border-color: #4CAF50; background: #1a2e1a; }
+        &.lost { border-color: #F44336; background: #2e1a1a; }
+
+        .match-opponent .opponent-name { color: #e0e0e0; }
+        .match-details .match-reason { color: #888; }
+
+        .match-result-badge .result-text {
+          &.victory { color: #81c784; background: #1b3a1b; border-color: #4CAF50; }
+          &.defeat { color: #e57373; background: #3a1b1b; border-color: #F44336; }
+        }
+      }
+    }
+  }
+}
+
+// 5. DECK SELECTION OVERLAY
+.deck-selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.deck-selection-panel {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 4px solid $retro-dark;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.5), inset 0 -4px 0 rgba(255, 255, 255, 0.1);
+  width: 420px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+
+  .panel-header {
+    background: linear-gradient(135deg, $retro-gold 0%, #daa520 100%);
+    padding: 0.75rem 1rem;
+    border-bottom: 3px solid $retro-dark;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3);
+
+    h3 {
+      margin: 0;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      color: $retro-dark;
+      text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.3);
+      letter-spacing: 2px;
+      text-align: center;
+    }
+  }
+
+  .panel-body {
+    padding: 1rem;
+    min-height: 120px;
+    max-height: 300px;
+    overflow-y: auto;
+
+    .no-decks-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+
+      .pixel-icon-small {
+        width: 32px;
+        image-rendering: pixelated;
+      }
+
+      p {
+        margin: 0;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 0.6rem;
+        color: white;
+        line-height: 1.6;
+      }
+
+      .sub {
+        color: #888;
+        font-size: 0.5rem;
+      }
+    }
+
+    .decks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .deck-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #2a2a4e 0%, #1f1f3a 100%);
+        border: 3px solid $retro-dark;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+          background: linear-gradient(135deg, #3a3a5e 0%, #2f2f4a 100%);
+        }
+
+        &:active {
+          transform: translateY(2px);
+          box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        &.selected {
+          border-color: $retro-gold;
+          background: linear-gradient(135deg, #3a3a2e 0%, #2f2f1a 100%);
+          box-shadow: 0 4px 0 $retro-gold;
+        }
+
+        .deck-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+
+          .deck-name {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.55rem;
+            color: white;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7);
+          }
+
+          .deck-cards {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.45rem;
+            color: #aaa;
+          }
+        }
+
+        .deck-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+        }
+
+        .deck-preview-btn {
+          background: rgba(0, 0, 0, 0.3);
+          border: 2px solid $retro-gold;
+          color: $retro-gold;
+          font-family: 'Press Start 2P', cursive;
+          font-size: 0.45rem;
+          padding: 0.2rem 0.35rem;
+          cursor: pointer;
+          transition: transform 0.1s steps(2);
+          box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+
+          &:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.4);
+          }
+
+          &:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+          }
+        }
+
+        .deck-check {
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid #555;
+          font-size: 0.5rem;
+          color: $retro-gold;
+
+          &.checked {
+            border-color: $retro-gold;
+            background: rgba($retro-gold, 0.15);
+          }
+        }
+      }
+    }
+  }
+
+  .panel-footer {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+
+    .pixel-btn {
+      flex: 1;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.5rem;
+      padding: 0.75rem;
+      cursor: pointer;
+      border: 3px solid $retro-dark;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+      transition: all 0.2s ease;
+      text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7);
+      letter-spacing: 1px;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &.cancel-btn {
+        background: linear-gradient(135deg, #4a2a2a 0%, #3f1f1f 100%);
+        color: #ff6b6b;
+        border-color: #ff6b6b;
+
+        &:hover {
+          background: linear-gradient(135deg, #5a3a3a 0%, #4f2f2f 100%);
+          box-shadow: 0 6px 0 #ff6b6b;
+        }
+      }
+
+      &.confirm-btn {
+        background: linear-gradient(135deg, #2a4a2a 0%, #1f3f1f 100%);
+        color: #4caf50;
+        border-color: #4caf50;
+
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #3a5a3a 0%, #2f4f2f 100%);
+          box-shadow: 0 6px 0 #4caf50;
+        }
+      }
+
+      &.online-btn {
+        background: linear-gradient(135deg, #2a2a4e 0%, #1f1f3a 100%);
+        color: $retro-gold;
+        border-color: $retro-gold;
+
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #3a3a5e 0%, #2f2f4a 100%);
+          box-shadow: 0 6px 0 $retro-gold;
+        }
+      }
+    }
+  }
+}
+
+// Game code overlay (reuses join-game styles)
+.join-game-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.join-game-panel {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 4px solid $retro-dark;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.5);
+  width: 480px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+
+  .panel-header {
+    background: linear-gradient(135deg, $retro-gold 0%, #daa520 100%);
+    padding: 0.75rem 1rem;
+    border-bottom: 3px solid $retro-dark;
+
+    h3 {
+      margin: 0;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      color: $retro-dark;
+      text-align: center;
+    }
+  }
+
+  .game-code-body {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+
+    .game-code-label {
+      margin: 0;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.5rem;
+      color: #aaa;
+    }
+
+    .game-code-value {
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      color: $retro-gold;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1rem 1.5rem;
+      border: 2px dashed $retro-gold;
+      word-break: break-all;
+      letter-spacing: 2px;
+      user-select: all;
+    }
+
+    .game-code-error {
+      margin: 0;
+      color: #ff6b6b;
+      font-size: 0.5rem;
+      font-family: 'Press Start 2P', cursive;
+    }
+
+    .copy-btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+      border: 3px solid $retro-dark;
+      background: #2e7d32;
+      color: white;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+      transition: all 0.2s ease;
+      &:hover { background: lighten(#2e7d32, 10%); transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5); }
+      &:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
+    }
+  }
+
+  .panel-footer {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+
+    .pixel-btn {
+      flex: 1;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.5rem;
+      padding: 0.75rem;
+      cursor: pointer;
+      border: 3px solid $retro-dark;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &.cancel-btn {
+        background: linear-gradient(135deg, #4a2a2a 0%, #3f1f1f 100%);
+        color: #ff6b6b;
+        border-color: #ff6b6b;
+      }
+
+      &.confirm-btn {
+        background: linear-gradient(135deg, #2a4a2a 0%, #1f3f1f 100%);
+        color: #4caf50;
+        border-color: #4caf50;
+      }
+    }
+  }
+}
+
+.avatar-grid-body {
+  padding: 1rem;
+  max-height: 500px;
+  overflow-y: auto;
+
+  // Custom Retro Scrollbar
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+  &::-webkit-scrollbar-track {
+    background: $retro-dark;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $retro-gold;
+    border: 3px solid $retro-dark;
+    &:hover {
+      background: lighten($retro-gold, 10%);
+    }
+  }
+}
+
+// Dark mode toggle button
+.dark-mode-toggle {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid $retro-dark;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .toggle-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+}
+
+// Dark theme
+.dark-mode {
+  &.retro-lobby {
+    background-color: #0d0d1a;
+    background-image:
+      linear-gradient(45deg, #15152a 25%, transparent 25%, transparent 75%, #15152a 75%, #15152a),
+      linear-gradient(45deg, #15152a 25%, transparent 25%, transparent 75%, #15152a 75%, #15152a);
+  }
+
+  .section-title h2 {
+    color: white;
+    text-shadow: 2px 2px 0px #0d0d1a;
+  }
+
+  .pixel-card {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    border: 4px solid #222;
+    border-image: none;
+
+    .text-group p {
+      color: #999;
+    }
+
+    &.online-trainers {
+      .card-header { border-bottom-color: #333; }
+      .trainer-item:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.1);
+      }
+    }
+  }
+
+  .join-game-card {
+    background: #1a1a2e;
+    border: 4px solid #222;
+    border-image: none;
+
+    .join-label { color: white; }
+
+    .join-input {
+      background: #0d0d1a;
+      color: #e0e0e0;
+      border-color: #333;
+
+      &:focus {
+        border-color: $retro-gold;
+        background: #1a1a2e;
+      }
+
+      &::placeholder { color: #555; }
+    }
+  }
+
+  .dark-mode-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #666;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  .pixel-card.create-room,
+  .pixel-card.deck-manager,
+  .return-to-game-btn,
+  .pixel-btn,
+  .deck-preview-btn,
+  .join-btn,
+  .dark-mode-toggle,
+  .avatar-option,
+  .user-card {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="16" height="16" fill="transparent"/><rect x="0" y="0" width="4" height="4" fill="white"/><rect x="4" y="4" width="4" height="4" fill="white"/><rect x="8" y="8" width="4" height="4" fill="white"/></svg>'), pointer;
+  }
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  padding: 0.5rem;
+
+  .avatar-option {
+    aspect-ratio: 1;
+    background: white;
+    border: 4px solid $retro-dark;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s steps(2);
+    @include pixel-shadow;
+
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 4px 4px 0 $retro-gold;
+      border-color: $retro-gold;
+    }
+
+    &.selected {
+      border-color: $retro-gold;
+      background: rgba($retro-gold, 0.15);
+      box-shadow: inset 0 0 15px rgba($retro-gold, 0.4);
+      outline: 3px solid $retro-gold;
+    }
+
+    .avatar-option-img {
+      width: 90%;
+      height: 90%;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+  }
+}
+

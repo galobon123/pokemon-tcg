@@ -1,0 +1,36 @@
+server:
+  port: ${PORT:8081}
+
+spring:
+  application:
+    name: game-service
+
+  # Configuración de Persistencia (PostgreSQL)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/pokemontcg}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    table: game_flyway_schema_history
+    baseline-on-migrate: true
+    baseline-version: 0
+
+# Configuración de integración con otros microservicios
+realtime:
+  service:
+    url: ${REALTIME_URL:http://localhost:8082}
+
+card:
+  service:
+    url: ${CARD_SERVICE_URL:http://localhost:8083}

@@ -1,0 +1,3 @@
+ALTER TABLE cards
+    ADD COLUMN IF NOT EXISTS evolves_from VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS abilities TEXT;
